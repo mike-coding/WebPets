@@ -1,15 +1,22 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { Canvas } from "@react-three/fiber";
+import MainMenu from './MainMenu';
 import './App.css'
-import MainMenu from './MainMenu'
 
-function App() {
+
+export default function App() {
   return (
-    <div className="h-screen w-screen flex flex-row items-center justify-center">
-      <MainMenu/>
+    <div className="relative h-screen w-screen">
+      <Canvas className="absolute top-0 left-0 w-full h-full">
+        <mesh>
+          <boxGeometry args={[2, 2, 2]} />
+          <meshPhongMaterial />
+        </mesh>
+        <ambientLight intensity={0.1} />
+        <directionalLight position={[0, 0, 5]} color="red" />
+      </Canvas>
+      <div className="absolute inset-0 z-10 flex items-center justify-center">
+        <MainMenu />
+      </div>
     </div>
-  )
+  );
 }
-
-export default App
