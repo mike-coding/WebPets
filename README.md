@@ -5,3 +5,5 @@ This is intended to be a continuation of bitbeast arena, reimagined as an in-bro
 We're very much in the early stages here, but let's see how it goes!
 
 <img src = "assets/egg.png">
+
+<img src = "assets/varmintsScreenshot.png">
