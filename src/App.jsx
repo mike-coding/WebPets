@@ -1,20 +1,17 @@
 import { Canvas } from "@react-three/fiber";
 import MainMenu from './MainMenu';
 import './App.css'
+import TiledGround from "./TiledGround";
 
 
 export default function App() {
   return (
     <div className="relative h-screen w-screen">
-      <Canvas className="absolute top-0 left-0 w-full h-full">
-        <mesh>
-          <boxGeometry args={[2, 2, 2]} />
-          <meshPhongMaterial />
-        </mesh>
-        <ambientLight intensity={0.1} />
-        <directionalLight position={[0, 0, 5]} color="gray" />
+      <Canvas className="GAME CONTENT____ absolute top-0 left-0 w-full h-full">
+        <TiledGround/>
+        <ambientLight intensity={2.5} />
       </Canvas>
-      <div className="absolute inset-0 z-10 flex items-center justify-center">
+      <div className="UI OVERLAY___ absolute inset-0 z-10 flex items-center justify-center">
         <MainMenu />
       </div>
     </div>
