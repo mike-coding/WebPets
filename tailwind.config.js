@@ -82,7 +82,10 @@ export default {
       transitionDelay: {
         '400': '400ms',
         '350': '350ms'
-      }
+      },
+      fontFamily: {
+        m6x11: ['m6x11', 'sans-ser'],
+      },
     },
     },
   plugins: [],
