@@ -1,6 +1,6 @@
-import MainMenu from './MainMenu';
+import MainMenu from './components/MainMenu';
 import './App.css'
-import GameEnvironment from "./GameEnvironment";
+import GameEnvironment from "./components/GameEnvironment";
 
 
 export default function App() {
