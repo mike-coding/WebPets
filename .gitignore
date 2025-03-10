@@ -1,1 +1,26 @@
 backEnd/server/instance/*
+
+# Logs
+virtual-varmints/logs
+virtual-varmints/*.log
+virtual-varmints/npm-debug.log*
+virtual-varmints/yarn-debug.log*
+virtual-varmints/yarn-error.log*
+virtual-varmints/pnpm-debug.log*
+virtual-varmints/lerna-debug.log*
+
+virtual-varmints/node_modules
+virtual-varmints/dist
+virtual-varmints/dist-ssr
+virtual-varmints/*.local
+
+# Editor directories and files
+virtual-varmints/.vscode/*
+virtual-varmints/!.vscode/extensions.json
+virtual-varmints/.idea
+virtual-varmints/.DS_Store
+virtual-varmints/*.suo
+virtual-varmints/*.ntvs*
+virtual-varmints/*.njsproj
+virtual-varmints/*.sln
+virtual-varmints/*.sw?
