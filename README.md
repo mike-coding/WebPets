@@ -6,7 +6,7 @@ We're very much in the early stages here, but let's see how it goes!
 
 <img src = "screenshots/VVs2.PNG">
 Progress as of 3/10/25
-<img src = "screenshots/VarmintsScreenshot.PNG">
+<img src = "screenshots/varmintsScreenshot.PNG">
 Progress as of 2/27/25
 <img src = "screenshots/virtualVarmints.PNG">
 Progress as of 2/26/25
@@ -14,9 +14,11 @@ Progress as of 2/26/25
 ## Tech Stack
 - React
 - Vite
-- React Three Fiber
+- React Three Fiber (with react-three/drei)
 - TailwindCSS
 - Flask
+- SQLAlchemy (with SQLite)
+- Flask-CORS
 
 ## 3D trees r3f rendering progress
 <img src = "screenshots/tree.PNG">

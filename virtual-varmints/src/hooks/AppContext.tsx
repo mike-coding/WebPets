@@ -1,8 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { TopLevelPage, ValidSubPage, NavigationState } from '../utils/NavigationTypes';
 
-
-// Define types for the user data coming from the API
 interface Varmint {
   id: number;
   name: string;
@@ -11,23 +9,20 @@ interface Varmint {
   abilities: string;
 }
 
-interface UserGameData {
+// Consolidated interface.
+export interface UserData {
+  id: number;
+  username: string;
   completed_tutorial: boolean;
   varmints: Varmint[];
 }
 
-export interface UserData {
-  id: number;
-  username: string;
-  data: UserGameData;
-}
-
-// Define the shape of the context value
 interface AppContextType {
   navigation: NavigationState;
   navigateTo: (page: TopLevelPage, subPage?: ValidSubPage | null) => void;
   userData: UserData | null;
   setUserData: (userData: UserData | null) => void;
+  updateUserData: (changes: Partial<UserData>) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -37,26 +32,46 @@ interface AppProviderProps {
 }
 
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
-  // Navigation state
   const [navigation, setNavigation] = useState<NavigationState>({
     activePage: "mainMenu",
     activeSubPage: "loginRegister",
   });
 
-  // Function to update navigation state
   const navigateTo = (page: TopLevelPage, subPage: ValidSubPage | null = null) => {
     setNavigation({ activePage: page, activeSubPage: subPage });
   };
 
-  // Centralized state for user information from the API.
-  // This state is expected to match the shape defined in the UserData interface.
   const [userData, setUserData] = useState<UserData | null>(null);
+
+  const updateUserData = (changes: Partial<UserData>) => {
+    if (!userData) return;
+    // Merge changes into userData optimistically.
+    const updatedUserData = { ...userData, ...changes };
+    setUserData(updatedUserData);
+
+    // Send the changes to the API.
+    fetch(`http://localhost:5000/userdata/${userData.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedUserData),
+    })
+      .then((res) => res.json())
+      .then((serverData) => {
+        // Update context with server response.
+        setUserData(serverData);
+      })
+      .catch((err) => {
+        console.error("Error updating userData:", err);
+        // Optionally revert the optimistic update here.
+      });
+  };
 
   const contextValue: AppContextType = {
     navigation,
     navigateTo,
     userData,
     setUserData,
+    updateUserData,
   };
 
   return (
@@ -66,7 +81,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   );
 };
 
-// Hook for accessing navigation state and functions
 export function useNavigationContext() {
   const context = useContext(AppContext);
   if (!context) {
@@ -75,12 +89,17 @@ export function useNavigationContext() {
   return { navigation: context.navigation, navigateTo: context.navigateTo };
 }
 
-// Hook for accessing user data and its updater function
 export function useUserDataContext() {
   const context = useContext(AppContext);
   if (!context) {
     throw new Error("useUserDataContext must be used within an AppProvider");
   }
-  return { userData: context.userData, setUserData: context.setUserData };
+  return {
+    userData: context.userData,
+    setUserData: context.setUserData,
+    updateUserData: context.updateUserData,
+  };
 }
+
+
 

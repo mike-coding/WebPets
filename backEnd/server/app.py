@@ -181,7 +181,7 @@ def login():
 # Endpoint to get a user's full data (user + userdata + nested varmints)
 @app.route('/userdata/<int:user_id>', methods=['GET'])
 def get_userdata(user_id):
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         return jsonify(error="User not found"), 404
     if not user.data:
@@ -191,10 +191,9 @@ def get_userdata(user_id):
     result['data'] = user.data.to_dict()
     return jsonify(result), 200
 
-# Endpoint to update a user's data (tutorial status and varmints)
 @app.route('/userdata/<int:user_id>', methods=['PUT'])
 def update_userdata(user_id):
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         return jsonify(error="User not found"), 404
     if not user.data:
