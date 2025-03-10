@@ -87,6 +87,18 @@ export default {
       fontFamily: {
         m6x11: ['m6x11', 'sans-ser'],
       },
+      keyframes: {
+        sineWave: {
+          '0%': { transform: 'translateY(0)' },
+          '25%': { transform: 'translateY(-10px)' },
+          '50%': { transform: 'translateY(0)' },
+          '75%': { transform: 'translateY(10px)' },
+          '100%': { transform: 'translateY(0)' },
+        },
+      },
+      animation: {
+        sineWave: 'sineWave 1.5s ease-in-out infinite',
+      },
     },
     },
   plugins: [],
