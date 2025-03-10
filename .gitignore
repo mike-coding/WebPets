@@ -1,4 +1,4 @@
-backEnd/server/instance/*
+backEnd/server/instance/*.db
 
 # Logs
 virtual-varmints/logs
