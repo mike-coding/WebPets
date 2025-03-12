@@ -1,4 +1,3 @@
-// components/UIOverlay.jsx
 import React from 'react';
 import { useNavigationContext } from '../hooks/AppContext';
 import MainMenu from './MainMenu';

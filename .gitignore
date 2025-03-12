@@ -24,3 +24,5 @@ virtual-varmints/*.ntvs*
 virtual-varmints/*.njsproj
 virtual-varmints/*.sln
 virtual-varmints/*.sw?
+
+node_modules

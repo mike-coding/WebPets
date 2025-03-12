@@ -18,7 +18,7 @@ function EggCard({ id, hoverTip }) {
       };
 
       if (userData) {
-        const updatedVarmints = [...userData.data.varmints, newEgg];
+        const updatedVarmints = [...userData.varmints, newEgg];
         updateUserData({
           completed_tutorial: true,
           varmints: updatedVarmints,

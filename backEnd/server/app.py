@@ -39,18 +39,14 @@ class UserData(db.Model):
 class Varmint(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_data_id = db.Column(db.Integer, db.ForeignKey('user_data.id'), nullable=True)
-    # Evolution identifier stored as two integers.
     evolution_line = db.Column(db.Integer, default=0)
-    evolution_stage = db.Column(db.Integer, default=0)
+    evolution_stage = db.Column(db.Integer, default=0) # combine with evolution_line to form evol_ID
     name = db.Column(db.String(50))
     level = db.Column(db.Integer, default=1)
     xp = db.Column(db.Integer, default=0)
-    # Hunger is a float between 0 and 1.
-    hunger = db.Column(db.Float, default=1.0)
-    # Happiness is an integer with a maximum of 5.
-    happiness = db.Column(db.Integer, default=5)
-    # Abilities stored as a comma-separated string.
-    abilities = db.Column(db.String(200), default="")
+    hunger = db.Column(db.Float, default=1.0) # float from 0 - 1
+    happiness = db.Column(db.Integer, default=5) # int max 5
+    abilities = db.Column(db.String(200), default="") # comma-separated string
 
     def to_dict(self):
         return {
