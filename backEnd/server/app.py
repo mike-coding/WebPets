@@ -67,6 +67,7 @@ class Varmint(db.Model):
         Given a dictionary of varmint data and a parent user_data_id,
         either update an existing varmint (if "id" exists) or create a new one.
         """
+        print('unpacking varmint...')
         # If an id is provided, try to fetch and update an existing varmint.
         if "id" in varmint_data:
             varmint = cls.query.get(varmint_data["id"])

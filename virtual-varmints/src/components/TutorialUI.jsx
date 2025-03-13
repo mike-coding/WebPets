@@ -15,9 +15,9 @@ function TutorialUI() {
       </div>
       <div className="w-full flex flex-col justify-center items-center h-[90vh] gap-30">
         <div className="EGG_CARD_ROW___ flex flex-row justify-around w-full px-[15vh]">
-            <EggCard id="0" hoverTip="Mineral Egg"/>
-            <EggCard id="1" hoverTip="Seed Egg"/>
-            <EggCard id="2" hoverTip="Beast Egg"/>
+            <EggCard id={0} hoverTip="Mineral Egg"/>
+            <EggCard id={1} hoverTip="Seed Egg"/>
+            <EggCard id={2} hoverTip="Beast Egg"/>
         </div>
         <Button name="BACK" onClick={() => navigateTo("mainMenu", "loginRegister")} />
       </div>

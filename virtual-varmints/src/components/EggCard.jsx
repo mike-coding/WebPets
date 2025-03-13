@@ -6,7 +6,7 @@ function EggCard({ id, hoverTip }) {
     const { navigation, navigateTo } = useNavigationContext();
     const { userData, setUserData, updateUserData } = useUserDataContext();
     const [showTooltip, setShowTooltip] = useState(false);
-    function SelectEgg({ id }) {
+    function SelectEgg() {
       const newEgg = {
         evolution_id: [0, id],
         name: "Egg",

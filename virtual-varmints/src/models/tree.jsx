@@ -4,7 +4,7 @@ import { OBJLoader } from 'three-stdlib'
 import { MTLLoader } from 'three-stdlib'
 import * as THREE from 'three'
 
-export default function Tree({ position = [0, 0, 0], ...props }) {
+const Tree = React.memo(function tree({ position = [0, 0, 0], ...props }) {
   // Load materials first
   const materials = useLoader(MTLLoader, '/models/pineTree/pineTree.mtl')
   materials.preload()
@@ -39,4 +39,6 @@ export default function Tree({ position = [0, 0, 0], ...props }) {
   });
 
   return <primitive object={treeObj} position={position} rotation={[Math.PI / 2, 0, 0]} {...props} castShadow/>
-}
+});
+
+export default Tree;
