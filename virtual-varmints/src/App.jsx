@@ -1,4 +1,3 @@
-// App.js
 import UIOverlay from './components/UIOverlay';
 import './App.css';
 import GameEnvironment from "./components/GameEnvironment";

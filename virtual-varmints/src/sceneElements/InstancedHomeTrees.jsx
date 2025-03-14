@@ -34,14 +34,16 @@ function InstancedTreeMesh({ meshData, transforms }) {
   );
 }
 
-export default function InstancedTrees() {
+export default function InstancedTrees({ clearingWidth, clearingHeight }) {
+  // Calculate parameters based on provided props.
+  const clearingHalfWidth = clearingWidth / 2;
+  const clearingHalfHeight = clearingHeight / 2;
+  const cols = clearingWidth + 8;
+  const rows = clearingHeight + 8;
+
   // Compute tree transforms with the original rotation [Math.PI / 2, randomYRotation, 0]
   const transforms = useMemo(() => {
     const treeTransforms = [];
-    const cols = 24;
-    const rows = 20;
-    const clearingHalfWidth = 8;
-    const clearingHalfHeight = 6;
     for (let i = 0; i < cols; i++) {
       for (let j = 0; j < rows; j++) {
         const x = i - cols / 2 + 0.5;
@@ -68,7 +70,7 @@ export default function InstancedTrees() {
       }
     }
     return treeTransforms;
-  }, []);
+  }, [cols, rows, clearingHalfWidth, clearingHalfHeight]);
 
   // Load materials and the OBJ, then set the materials.
   const materials = useLoader(MTLLoader, "/models/pineTree/pineTree.mtl");

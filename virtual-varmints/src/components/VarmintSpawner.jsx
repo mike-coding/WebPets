@@ -8,8 +8,8 @@ export default function VarmintSpawner() {
   if (!userData || !userData.varmints || userData.varmints.length === 0) return <></>;
   return (
     <>
-      {userData.varmints.map((v) => (
-        <Varmint key={v.id} varmintInfo={v} bounds = {{ x: [-8, 8], y: [-6, 6] }}/>
+      {userData.varmints.map((v, index) => (
+        <Varmint key={v.id || `temp-${index}`} varmintInfo={v} bounds={{ x: [-8, 8], y: [-6, 6] }}/>
       ))}
     </>
   );

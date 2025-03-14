@@ -40,7 +40,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (!userData) return;
     const updatedUserData = { ...userData, ...changes };
     // Optionally perform an optimistic update:
-    set({ userData: updatedUserData });
+    //set({ userData: updatedUserData });
 
     fetch(`http://localhost:5000/userdata/${userData.id}`, {
       method: "PUT",

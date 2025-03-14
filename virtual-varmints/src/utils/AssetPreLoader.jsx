@@ -2,26 +2,9 @@ import { useTexture } from "@react-three/drei";
 import React, { useState, useEffect } from "react";
 import * as THREE from "three";
 
-// List of asset URLs to preload (e.g., textures).
-const assetUrls = [
-  "/sprites/tiles/grass/0.png",
-  "/sprites/tiles/grass/1.png",
-  "/sprites/tiles/grass/7.png",
-  "/sprites/tiles/grass/8.png",
-  "/sprites/tiles/grass/9.png",
-  "/sprites/tiles/grass/10.png",
-  "/sprites/tiles/grass/13.png",
-  "/sprites/tiles/grass/16.png",
-  "/sprites/tiles/grass/19.png",
-  "/sprites/tiles/grass/22.png",
-  "/sprites/tiles/grass/25.png",
-  "/sprites/tiles/grass/26.png",
-  "/sprites/tiles/grass/27.png",
-  "/sprites/tiles/grass/28.png",
-  "/sprites/varmints/0/0/0.png",
-  "/sprites/varmints/0/1/0.png",
-  "/sprites/varmints/0/2/0.png",
-];
+const modules = import.meta.glob('/src/sprites/**/*.png', { eager: true });
+const assetUrls = Object.values(modules).map(mod => mod.default);
+console.log("Asset URLs:", assetUrls);
 
 export default function AssetPreloader({ children }) {
   const [progress, setProgress] = useState(0);

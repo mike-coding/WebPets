@@ -8,7 +8,7 @@ export default function HomeEnvironment() {
   return (
     <>
       React.memo(<TiledGround patternWidth={25} patternHeight={20} />
-      <InstancedTrees/>)
+      <InstancedTrees clearingWidth={10} clearingHeight={8}/>)
       <VarmintSpawner/>
     </>
   );

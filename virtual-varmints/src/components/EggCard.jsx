@@ -34,7 +34,7 @@ function EggCard({ id, hoverTip }) {
     onMouseLeave={() => setShowTooltip(false)}
     >
         <img 
-        src = {`/sprites/varmints/0/${id}/0.png`}
+        src = {`../src/sprites/UI/egg_${id}.png`}
         className="w-[20vh] h-[20vh]"
         style={{ imageRendering: "pixelated" }}
         />
