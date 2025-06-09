@@ -14,6 +14,13 @@ interface Varmint {
   abilities: string; // stored as a comma-separated string
 }
 
+interface Item {
+  id: number;
+  name: string;
+  type: string; // string for now, anyway. Make this discrete later
+  
+}
+
 export interface UserData {
   id: number;
   username: string;
@@ -61,7 +68,6 @@ const typedUseAppStore = useAppStore as <T>(selector: (state: AppState) => T, eq
 export const useNavigationContext = () => {
   const navigation = typedUseAppStore((state) => state.navigation, shallow);
   const navigateTo = typedUseAppStore((state) => state.navigateTo, shallow);
-  // Cache the combined object to prevent returning a new object each time.
   return React.useMemo(() => ({ navigation, navigateTo }), [navigation, navigateTo]);
 };
 
