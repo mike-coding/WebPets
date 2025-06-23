@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'm6x11';
+  src: url('/fonts/m6x11.otf') format('opentype');
+  font-weight: 500;
+  font-display: swap;
+}
+
+@theme {
+  --font-m6x11: "m6x11", "sans-serif"; 
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}

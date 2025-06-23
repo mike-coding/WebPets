@@ -27,16 +27,16 @@ class UserData(db.Model):
     # Use the same primary key as the User id
     id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
     completed_tutorial = db.Column(db.Boolean, default=False)
-    # One-to-many relationship with Varmints
-    varmints = db.relationship('Varmint', backref='user_data', lazy=True)
+    # One-to-many relationship with pets
+    pets = db.relationship('pet', backref='user_data', lazy=True)
 
     def to_dict(self):
         return {
             "completed_tutorial": self.completed_tutorial,
-            "varmints": [varmint.to_dict() for varmint in self.varmints]
+            "pets": [pet.to_dict() for pet in self.pets]
         }
 
-class Varmint(db.Model):
+class pet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_data_id = db.Column(db.Integer, db.ForeignKey('user_data.id'), nullable=True)
     evolution_line = db.Column(db.Integer, default=0)
@@ -62,50 +62,50 @@ class Varmint(db.Model):
         }
 
     @classmethod
-    def process_json(cls, varmint_data, user_data_id):
+    def process_json(cls, pet_data, user_data_id):
         """
-        Given a dictionary of varmint data and a parent user_data_id,
-        either update an existing varmint (if "id" exists) or create a new one.
+        Given a dictionary of pet data and a parent user_data_id,
+        either update an existing pet (if "id" exists) or create a new one.
         """
-        print('unpacking varmint...')
-        # If an id is provided, try to fetch and update an existing varmint.
-        if "id" in varmint_data:
-            varmint = cls.query.get(varmint_data["id"])
-            if varmint and varmint.user_data_id == user_data_id:
-                varmint.name = varmint_data.get("name", varmint.name)
-                varmint.level = varmint_data.get("level", varmint.level)
-                varmint.xp = varmint_data.get("xp", varmint.xp)
-                varmint.hunger = varmint_data.get("hunger", varmint.hunger)
-                varmint.happiness = varmint_data.get("happiness", varmint.happiness)
+        print('unpacking pet...')
+        # If an id is provided, try to fetch and update an existing pet.
+        if "id" in pet_data:
+            pet = cls.query.get(pet_data["id"])
+            if pet and pet.user_data_id == user_data_id:
+                pet.name = pet_data.get("name", pet.name)
+                pet.level = pet_data.get("level", pet.level)
+                pet.xp = pet_data.get("xp", pet.xp)
+                pet.hunger = pet_data.get("hunger", pet.hunger)
+                pet.happiness = pet_data.get("happiness", pet.happiness)
                 # Handle abilities: if provided as a list, join into a comma-separated string.
-                abilities = varmint_data.get("abilities")
+                abilities = pet_data.get("abilities")
                 if abilities is not None:
                     if isinstance(abilities, list):
-                        varmint.abilities = ",".join(abilities)
+                        pet.abilities = ",".join(abilities)
                     else:
-                        varmint.abilities = abilities
+                        pet.abilities = abilities
                 # Process evolution identifier if provided.
-                evolution_id = varmint_data.get("evolution_id")
+                evolution_id = pet_data.get("evolution_id")
                 if evolution_id and isinstance(evolution_id, list) and len(evolution_id) == 2:
-                    varmint.evolution_stage, varmint.evolution_line = evolution_id
-                return varmint
+                    pet.evolution_stage, pet.evolution_line = evolution_id
+                return pet
 
-        # Otherwise, create a new varmint.
-        name = varmint_data.get("name")
-        level = varmint_data.get("level", 1)
-        xp = varmint_data.get("xp", 0)
-        hunger = varmint_data.get("hunger", 1.0)
-        happiness = varmint_data.get("happiness", 5)
-        abilities = varmint_data.get("abilities", [])
+        # Otherwise, create a new pet.
+        name = pet_data.get("name")
+        level = pet_data.get("level", 1)
+        xp = pet_data.get("xp", 0)
+        hunger = pet_data.get("hunger", 1.0)
+        happiness = pet_data.get("happiness", 5)
+        abilities = pet_data.get("abilities", [])
         if isinstance(abilities, list):
             abilities = ",".join(abilities)
-        evolution_id = varmint_data.get("evolution_id", [0, 0])
+        evolution_id = pet_data.get("evolution_id", [0, 0])
         if isinstance(evolution_id, list) and len(evolution_id) == 2:
             evolution_stage, evolution_line = evolution_id
         else:
             evolution_stage, evolution_line = 0, 0
 
-        new_varmint = cls(
+        new_pet = cls(
             user_data_id=user_data_id,
             evolution_line=evolution_line,
             evolution_stage=evolution_stage,
@@ -116,8 +116,8 @@ class Varmint(db.Model):
             happiness=happiness,
             abilities=abilities
         )
-        db.session.add(new_varmint)
-        return new_varmint
+        db.session.add(new_pet)
+        return new_pet
 
 
 
@@ -151,7 +151,7 @@ def register():
     db.session.add(new_user_data)
     db.session.commit()
 
-    # Return full user data including UserData and nested varmints
+    # Return full user data including UserData and nested pets
     result = new_user.to_dict()
     result["data"] = new_user.data.to_dict() if new_user.data else {}
     return jsonify(result), 201
@@ -170,12 +170,12 @@ def login():
     if user.password != data['password']:
         return jsonify(error="Incorrect password"), 401
 
-    # Return full user data including UserData and nested varmints
+    # Return full user data including UserData and nested pets
     result = user.to_dict()
     result["data"] = user.data.to_dict() if user.data else {}
     return jsonify(result), 200
 
-# Endpoint to get a user's full data (user + userdata + nested varmints)
+# Endpoint to get a user's full data (user + userdata + nested pets)
 @app.route('/userdata/<int:user_id>', methods=['GET'])
 def get_userdata(user_id):
     user = db.session.get(User, user_id)
@@ -197,15 +197,19 @@ def update_userdata(user_id):
         return jsonify(error="UserData not found"), 404
 
     data = request.get_json()
+    print(f"PUT /userdata/{user_id} received data:", data)
 
     # Update the tutorial status if provided
     if 'completed_tutorial' in data:
         user.data.completed_tutorial = data['completed_tutorial']
+        print(f"Updated completed_tutorial to: {data['completed_tutorial']}")
 
-    # Process varmints if provided using our helper function.
-    if 'varmints' in data:
-        for varmint_data in data['varmints']:
-            Varmint.process_json(varmint_data, user.data.id)
+    # Process pets if provided using our helper function.
+    if 'pets' in data:
+        print(f"Processing {len(data['pets'])} pets")
+        for pet_data in data['pets']:
+            print(f"Processing pet data: {pet_data}")
+            pet.process_json(pet_data, user.data.id)
 
     db.session.commit()
     updated_data = user.data.to_dict()

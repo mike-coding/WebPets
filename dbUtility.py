@@ -50,8 +50,8 @@ def view_db():
 def wipe_db():
     """Wipe the DB by deleting the file."""
     if os.path.exists(DATABASE_FILENAME):
-        confirmation = input("Are you sure you want to wipe the DB? (Y/N): ")
-        if confirmation.lower() == 'y':
+        confirmation = input("Are you sure you want to wipe the DB?\n[Press ENTER to continue, any other key to cancel]:\n")
+        if not confirmation:
             os.remove(DATABASE_FILENAME)
             print("DB wiped successfully.")
         else:

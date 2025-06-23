@@ -1,4 +1,4 @@
-# VIRTUAL VARMINTS WEB APPLICATION v0.0.1 ALPHA
+# VIRTUAL PETS WEB APPLICATION v0.0.1 ALPHA
 
 This is intended to be a continuation of bitbeast arena, reimagined as an in-browser virtual pet game a la the style of Neopets.
 
