@@ -20,7 +20,7 @@ function AuthSubmissionUI() {
             <LoadingIndicator/>
         </div>
     ):(
-        <div className="USER_PASSWORD____ w-full justify-center flex flex-col items-center gap-4 sm:gap-5 h-full py-4">
+        <div className="USER_PASSWORD____ w-full justify-center flex flex-col items-center gap-4 sm:gap-5 h-full py-4 pointer-events-auto">
             <div className="USER_PASSWORD____ w-full justify-center flex flex-col items-center gap-6 sm:gap-8">
                 <Field title="USER" value={userName} setValue={setUserName} />
                 <Field title="PASS" hide={true} value={password} setValue={setPassword} />

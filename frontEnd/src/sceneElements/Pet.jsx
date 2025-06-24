@@ -3,13 +3,18 @@ import { useFrame, useThree, extend } from "@react-three/fiber";
 import { Billboard, useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import SpriteAnimator from "./SpriteAnimator.jsx";
+import { useNavigationContext } from "../hooks/AppContext";
 
 export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
   const groupRef = useRef();
+  const { navigateTo } = useNavigationContext();
   const fixedZ = 0.2;
   const speed = 2;
   const [target, setTarget] = useState(new THREE.Vector2());
-  const [direction, setDirection] = useState("F");
+  const [direction, setDirection] = useState("F");  const handleClick = (event) => {
+    event.stopPropagation();
+    navigateTo("petSummary", null, petInfo.id);
+  };
 
   useEffect(() => {
     if (groupRef.current) {
@@ -62,12 +67,10 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
       currentXY.add(toTarget.multiplyScalar(scaledSpeed * clampedDelta));
       groupRef.current.position.set(currentXY.x, currentXY.y, fixedZ);
     }
-  });
-
+  });  
   console.log("Pet render", performance.now(), petInfo);
-
   return (
-    <group ref={groupRef}>
+    <group ref={groupRef} onClick={handleClick}>
       <Billboard follow={true}>
         <SpriteAnimator
           evolution_id={petInfo.evolution_id}

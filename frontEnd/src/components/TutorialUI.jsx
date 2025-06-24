@@ -7,7 +7,7 @@ import EggCarousel from './EggCarousel';
 function TutorialUI() {
   const { navigation, navigateTo } = useNavigationContext();
   return (
-    <div className="w-6/7 sm:w-5/7 h-[80vh] flex flex-col items-center py-[5vh] my-[4vh] backdrop-blur-xs backdrop-brightness-150 backdrop-contrast-60 shadow-xl rounded-sm px-4 sm:px-0">
+    <div className="w-6/7 sm:w-5/7 h-[80vh] flex flex-col items-center py-[5vh] my-[4vh] backdrop-blur-xs backdrop-brightness-150 backdrop-contrast-60 shadow-xl rounded-sm px-4 sm:px-0 pointer-events-auto">
       <div className="TITLE_BLOCK___ flex flex-row gap-2 sm:gap-4 items-center h-[15vh] select-none">
         <div className="MAIN_TITLE__ font-m6x11 font-bold text-2xl sm:text-7xl text-white text-center pl-2 sm:pl-5 pb-1 sm:pb-2 tracking-wide">
           Welcome! Select your starting egg.

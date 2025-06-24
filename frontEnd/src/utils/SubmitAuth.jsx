@@ -37,7 +37,7 @@ export function useSubmitAuth() {
 
           setUserData(transformedData);
           console.log("setUserData called", performance.now());
-          const targetSubpage = transformedData.completed_tutorial ? null : "tutorial";
+          const targetSubpage = transformedData.completed_tutorial ? "default" : "tutorial";
           navigateTo('main', targetSubpage);
         } else if (status === 401) {
           setAuthFeedback('Invalid password');

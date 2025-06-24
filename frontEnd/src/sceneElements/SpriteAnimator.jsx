@@ -15,7 +15,7 @@ function getSpriteUrl(e0, e1, dir, frame) {
   return `/src/sprites/pets/${e0}/${e1}/${dir}/${frame}.png`;
 }
 
-export default function SpriteAnimator({ evolution_id, direction, flipInterval = 0.5 }) {
+export default function SpriteAnimator({ evolution_id, direction, flipInterval = 0.5, onClick }) {
   const isEgg = evolution_id[0] === 0;
   // For eggs, always use "F"
   const actualDirection = isEgg ? "F" : direction;
@@ -89,10 +89,8 @@ export default function SpriteAnimator({ evolution_id, direction, flipInterval =
       setFrameIndex((prev) => (prev + 1) % textures[actualDirection].length);
       timeAccumulator.current = 0;
     }
-  });
-
-  return (
-    <sprite>
+  });    return (
+    <sprite scale={[1, 1, 1]}>
       <spriteMaterial attach="material" map={textures[actualDirection][frameIndex]} transparent />
     </sprite>
   );

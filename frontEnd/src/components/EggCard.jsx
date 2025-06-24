@@ -39,9 +39,8 @@ function EggCard({ id, hoverTip }) {
     }
 
     // Use the imported URL for the egg image
-    const eggImgUrl = eggUrlMap[id];    return (
-      <div 
-        className="relative w-[200px] h-[200px] sm:w-[25vh] sm:h-[25vh] flex flex-row bg-gray-900/30 shadow-md rounded-sm justify-center items-center transform transition duration-200 hover:scale-110 hover:cursor-default hover:bg-gray-900/50 select-none active:scale-100"
+    const eggImgUrl = eggUrlMap[id];    return (      <div 
+        className="relative w-[200px] h-[200px] sm:w-[25vh] sm:h-[25vh] flex flex-row bg-gray-900/30 shadow-md rounded-sm justify-center items-center transform transition duration-200 hover:scale-110 hover:cursor-default hover:bg-gray-900/50 select-none active:scale-100 pointer-events-auto"
         onClick={SelectEgg}
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}

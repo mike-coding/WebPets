@@ -6,7 +6,13 @@ import React, { Suspense } from "react"
 
 export default function GameEnvironment() {
   return (
-    <Canvas shadows camera={{ position: [0, -20, 40], fov: 9.5 }} gl={{ preserveDrawingBuffer: false, alpha: false }} onCreated={({ gl }) => {gl.autoClear = false;}}>
+    <Canvas 
+      shadows 
+      camera={{ position: [0, -20, 40], fov: 9.5 }} 
+      gl={{ preserveDrawingBuffer: false, alpha: false }} 
+      onCreated={({ gl }) => {gl.autoClear = false;}}
+      style={{ pointerEvents: 'auto' }}
+    >
       <color attach="background" args={['#000000']} />  
       <HomeEnvironment/>
       <ambientLight intensity={1.5} />

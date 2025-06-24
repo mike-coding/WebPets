@@ -2,8 +2,10 @@ import React from 'react';
 import { useNavigationContext } from '../hooks/AppContext';
 import MainMenu from './MainMenu';
 import TutorialUI from './TutorialUI';
+import HomeUI from './HomeUI';
+import PetSummary from './PetSummary';
 
-const UIOverlay = () => {
+function UIOverlay() {
   const { navigation } = useNavigationContext();
 
   return (
@@ -15,17 +17,25 @@ const UIOverlay = () => {
         <div className="w-full py-[0.75vh] px-4 font-m6x11 text-white-500 opacity-60 text-2xl pl-4.5 pt-2.5">
           v0.0.1 ALPHA
         </div>
-      </div>
+      </div>        
       {navigation.activePage === "mainMenu" ? (
-        <MainMenu />
+        <MainMenu/>
       ) : navigation.activePage === "main" && navigation.activeSubPage === "tutorial" ? (
         <TutorialUI />
+      ) : navigation.activePage === "main" && navigation.activeSubPage === "default" ? (
+        <HomeUI/>
+      ) : navigation.activePage === "petSummary" ? (
+        <>
+          <PetSummary/>
+          <HomeUI/>
+        </>
       ) : (
-        <></>
-      )}
+        <div>{navigation.activePage} {navigation.activeSubPage}</div>
+      )
+      }
     </>
   );
-};
+}
 
 export default UIOverlay;
 

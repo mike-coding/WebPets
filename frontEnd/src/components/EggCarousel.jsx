@@ -82,10 +82,9 @@ function EggCarousel() {
     }
   };  return (
     <div className="flex flex-col items-center gap-4 w-full m-8">
-      {/* Carousel Container */}
-      <div 
+      {/* Carousel Container */}      <div 
         ref={containerRef}
-        className="relative w-[240px] h-[200px] overflow-hidden touch-pan-y"
+        className="relative w-[240px] h-[200px] overflow-hidden touch-pan-y pointer-events-auto"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
