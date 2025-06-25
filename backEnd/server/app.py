@@ -94,7 +94,7 @@ class pet(db.Model):
         name = pet_data.get("name")
         level = pet_data.get("level", 1)
         xp = pet_data.get("xp", 0)
-        hunger = pet_data.get("hunger", 1.0)
+        hunger = pet_data.get("hunger", 0.5)
         happiness = pet_data.get("happiness", 0.5)
         created_at = pet_data.get("createdAt")
         abilities = pet_data.get("abilities", [])
