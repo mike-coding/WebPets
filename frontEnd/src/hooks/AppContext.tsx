@@ -10,8 +10,9 @@ export interface Pet {
   level: number;
   xp: number;
   hunger: number;    // between 0 and 1
-  happiness: number; // max 5
+  happiness: number; // between 0 and 1
   abilities: string; // stored as a comma-separated string
+  createdAt: number; // timestamp in milliseconds
 }
 
 interface Item {

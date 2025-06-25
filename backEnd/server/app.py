@@ -42,11 +42,12 @@ class pet(db.Model):
     evolution_line = db.Column(db.Integer, default=0)
     evolution_stage = db.Column(db.Integer, default=0) # combine with evolution_line to form evol_ID
     name = db.Column(db.String(50))
-    level = db.Column(db.Integer, default=1)
+    level = db.Column(db.Integer, default=1)    
     xp = db.Column(db.Integer, default=0)
-    hunger = db.Column(db.Float, default=1.0) # float from 0 - 1
-    happiness = db.Column(db.Integer, default=5) # int max 5
+    hunger = db.Column(db.Float, default=0.5) # float from 0 - 1
+    happiness = db.Column(db.Float, default=0.5) # float from 0 - 1
     abilities = db.Column(db.String(200), default="") # comma-separated string
+    created_at = db.Column(db.BigInteger, nullable=True) # timestamp in milliseconds
 
     def to_dict(self):
         return {
@@ -58,7 +59,8 @@ class pet(db.Model):
             "xp": self.xp,
             "hunger": self.hunger,
             "happiness": self.happiness,
-            "abilities": self.abilities.split(",") if self.abilities else []
+            "abilities": self.abilities.split(",") if self.abilities else [],
+            "createdAt": self.created_at
         }
 
     @classmethod
@@ -67,8 +69,7 @@ class pet(db.Model):
         Given a dictionary of pet data and a parent user_data_id,
         either update an existing pet (if "id" exists) or create a new one.
         """
-        print('unpacking pet...')
-        # If an id is provided, try to fetch and update an existing pet.
+        print('unpacking pet...')        # If an id is provided, try to fetch and update an existing pet.
         if "id" in pet_data:
             pet = cls.query.get(pet_data["id"])
             if pet and pet.user_data_id == user_data_id:
@@ -77,6 +78,7 @@ class pet(db.Model):
                 pet.xp = pet_data.get("xp", pet.xp)
                 pet.hunger = pet_data.get("hunger", pet.hunger)
                 pet.happiness = pet_data.get("happiness", pet.happiness)
+                pet.created_at = pet_data.get("createdAt", pet.created_at)
                 # Handle abilities: if provided as a list, join into a comma-separated string.
                 abilities = pet_data.get("abilities")
                 if abilities is not None:
@@ -88,14 +90,13 @@ class pet(db.Model):
                 evolution_id = pet_data.get("evolution_id")
                 if evolution_id and isinstance(evolution_id, list) and len(evolution_id) == 2:
                     pet.evolution_stage, pet.evolution_line = evolution_id
-                return pet
-
-        # Otherwise, create a new pet.
+                return pet        # Otherwise, create a new pet.
         name = pet_data.get("name")
         level = pet_data.get("level", 1)
         xp = pet_data.get("xp", 0)
         hunger = pet_data.get("hunger", 1.0)
-        happiness = pet_data.get("happiness", 5)
+        happiness = pet_data.get("happiness", 0.5)
+        created_at = pet_data.get("createdAt")
         abilities = pet_data.get("abilities", [])
         if isinstance(abilities, list):
             abilities = ",".join(abilities)
@@ -114,7 +115,8 @@ class pet(db.Model):
             xp=xp,
             hunger=hunger,
             happiness=happiness,
-            abilities=abilities
+            abilities=abilities,
+            created_at=created_at
         )
         db.session.add(new_pet)
         return new_pet

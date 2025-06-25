@@ -15,17 +15,16 @@ const eggUrlMap = Object.fromEntries(
 function EggCard({ id, hoverTip }) {
     const { navigation, navigateTo } = useNavigationContext();
     const { userData, setUserData, updateUserData } = useUserDataContext();
-    const [showTooltip, setShowTooltip] = useState(false);
-
-    function SelectEgg() {
+    const [showTooltip, setShowTooltip] = useState(false);    function SelectEgg() {
       const newEgg = {
         evolution_id: [0, id],
         name: "Egg",
         level: 1,
         xp: 0,
-        hunger: 1.0,
-        happiness: 2,
-        abilities: []
+        hunger: 0.5,
+        happiness: 0.5,
+        abilities: [],
+        createdAt: Date.now()
       };
 
       if (userData) {
