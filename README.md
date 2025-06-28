@@ -1,4 +1,4 @@
-# WEBPETS WEB APPLICATION v0.0.2 ALPHA
+# WEBPETS v0.0.2 ALPHA
 
 This is intended to be a continuation of bitbeast arena, reimagined as a MOBILE in-browser virtual pet game. I'm not sure where exactly this thing will end up. A little bit of neopets, a lot of tamagotchi, some digimon. 
 
