@@ -21,9 +21,9 @@ function TutorialUI() {
         
         {/* Desktop Row */}
         <div className="hidden sm:flex flex-row justify-around items-center w-full px-[15vh]">
-            <EggCard id={0} hoverTip="Mineral Egg"/>
-            <EggCard id={1} hoverTip="Seed Egg"/>
-            <EggCard id={2} hoverTip="Beast Egg"/>
+            <EggCard egg_id={0} hoverTip="Mineral Egg"/>
+            <EggCard egg_id={1} hoverTip="Seed Egg"/>
+            <EggCard egg_id={2} hoverTip="Beast Egg"/>
         </div>
         
         <Button name="BACK" onClick={() => navigateTo("mainMenu", "loginRegister")} />

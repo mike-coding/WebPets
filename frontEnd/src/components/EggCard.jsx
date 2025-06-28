@@ -12,14 +12,14 @@ const eggUrlMap = Object.fromEntries(
   })
 );
 
-function EggCard({ id, hoverTip }) {
+function EggCard({ egg_id, hoverTip }) {
     const { navigation, navigateTo } = useNavigationContext();
     const { userData, setUserData, updateUserData } = useUserDataContext();
     const [showTooltip, setShowTooltip] = useState(false);
 
     function SelectEgg() {
       const newEgg = {
-        evolution_id: [0, id],
+        evolution_id: [0, egg_id],
         name: "Egg",
         level: 1,
         xp: 0,
@@ -40,7 +40,7 @@ function EggCard({ id, hoverTip }) {
     }
 
     // Use the imported URL for the egg image
-    const eggImgUrl = eggUrlMap[id];    return (      <div 
+    const eggImgUrl = eggUrlMap[egg_id];    return (      <div 
         className="relative w-[200px] h-[200px] sm:w-[25vh] sm:h-[25vh] flex flex-row bg-gray-900/30 shadow-md rounded-sm justify-center items-center transform transition duration-200 hover:scale-110 hover:cursor-default hover:bg-gray-900/50 select-none active:scale-100 pointer-events-auto"
         onClick={SelectEgg}
         onMouseEnter={() => setShowTooltip(true)}
@@ -50,7 +50,7 @@ function EggCard({ id, hoverTip }) {
           src={eggImgUrl}
           className="w-[160px] h-[160px] sm:w-[20vh] sm:h-[20vh]"
           style={{ imageRendering: "pixelated" }}
-          alt={`Egg ${id}`}
+          alt={`Egg ${egg_id}`}
         />
         {showTooltip && <Tooltip text={hoverTip} />}
       </div>

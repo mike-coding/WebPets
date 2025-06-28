@@ -95,7 +95,7 @@ function EggCarousel() {
         >
           {infiniteEggs.map((egg, index) => (
             <div key={`${egg.id}-${index}`} className="min-w-[240px] flex justify-center">
-              <EggCard id={egg.id} hoverTip={egg.hoverTip} />
+              <EggCard egg_id={egg.id} hoverTip={egg.hoverTip} />
             </div>
           ))}
         </div>

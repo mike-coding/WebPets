@@ -48,14 +48,31 @@ export const useAppStore = create<AppState>((set, get) => ({
   },  
   updateUserData: (changes) => {
     const { userData } = get();
-    if (!userData) return;
+    if (!userData) {
+      console.error("❌ updateUserData called but userData is null!");
+      return;
+    }
+    
+    if (!userData.id) {
+      console.error("❌ userData exists but id is missing:", userData);
+      return;
+    }
+    
     const updatedUserData = { ...userData, ...changes };
+    
+    console.log("🔄 OPTIMISTIC UPDATE - Before:", userData);
+    console.log("🔄 OPTIMISTIC UPDATE - Changes:", changes);
+    console.log("🔄 OPTIMISTIC UPDATE - After:", updatedUserData);
+    console.log("🔄 USER ID FOR REQUEST:", userData.id);
+    
     // Optionally perform an optimistic update:
     set({ userData: updatedUserData });
 
     // Use the current host's IP address but change port to 5000
     const currentHost = window.location.hostname;
     const apiUrl = `http://${currentHost}:5000/userdata/${userData.id}`;
+
+    console.log("📤 SENDING TO SERVER:", JSON.stringify(updatedUserData, null, 2));
 
     fetch(apiUrl, {
       method: "PUT",
@@ -64,9 +81,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     })
       .then((res) => res.json())
       .then((serverData) => {
-        // Extract the data portion from the full user response
-        const userData = serverData.data || serverData;
-        set({ userData });
+        console.log("📥 SERVER RESPONSE:", serverData);
+        set({ userData: serverData });
+        console.log("✅ STATE UPDATED WITH SERVER DATA");
       })
       .catch((err) => {
         console.error("Error updating userData:", err);

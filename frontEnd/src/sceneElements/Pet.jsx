@@ -11,6 +11,7 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
   const { updatePetData } = useUserDataContext();
   const fixedZ = 0.2;
   const speed = 2;
+  const egg_incubation_minutes = 5;
   const [target, setTarget] = useState(new THREE.Vector2());
   const [direction, setDirection] = useState("F");
   
@@ -30,9 +31,9 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
     
     const now = Date.now();
     const ageMs = now - petInfo.createdAt;
-    const oneMinuteMs = 20 * 1000; // 1 minute in milliseconds
+    const incubation_ms = egg_incubation_minutes * 60000; // 60000ms = 1 minute
     
-    if (ageMs > oneMinuteMs) {
+    if (ageMs > incubation_ms) {
       console.log(`🥚➡️🐾 HATCHING! Pet ${petInfo.id} (age: ${ageMs}ms)`);
       
       // Hatch the egg by changing evolution_id[0] from 0 to 1
@@ -43,25 +44,12 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
     }
   };
 
+  // Initialize position once on mount
   useEffect(() => {
     if (groupRef.current) {
       groupRef.current.position.set(0, 0, fixedZ);
     }
-    
-    // Reset hatching check when petInfo changes
-    hasCheckedHatching.current = false;
-    
-    if (petInfo.evolution_id[0] === 0) {
-      setTarget(new THREE.Vector2(0, 0));
-      setDirection("F");
-    } else {
-      const newTarget = new THREE.Vector2(
-        THREE.MathUtils.randFloat(bounds.x[0], bounds.x[1]),
-        THREE.MathUtils.randFloat(bounds.y[0], bounds.y[1])
-      );
-      setTarget(newTarget);
-    }
-  }, [bounds, fixedZ, petInfo.evolution_id, petInfo.id]);
+  }, []); // Only run once on mount
 
   const deltaRef = useRef(0);
 
@@ -111,7 +99,8 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
       groupRef.current.position.set(currentXY.x, currentXY.y, fixedZ);
     }
   });
-  console.log("Pet render", performance.now(), petInfo);
+  console.log("Pet render", performance.now(), "petInfo:", petInfo);
+  console.log("  Pet evolution_id:", petInfo.evolution_id, "id:", petInfo.id);
   return (
     <group ref={groupRef} onClick={handleClick}>
       <Billboard follow={true}>

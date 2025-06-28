@@ -214,8 +214,20 @@ def update_userdata(user_id):
             pet.process_json(pet_data, user.data.id)
 
     db.session.commit()
-    updated_data = user.data.to_dict()
-    return jsonify(updated_data), 200
+    
+    # Return complete user data like login/register endpoints do
+    result = user.to_dict()
+    result["data"] = user.data.to_dict()
+    
+    # Transform to match frontend expectations  
+    response_data = {
+        "id": result["id"],
+        "username": result["username"], 
+        "completed_tutorial": result["data"]["completed_tutorial"],
+        "pets": result["data"]["pets"]
+    }
+    
+    return jsonify(response_data), 200
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)

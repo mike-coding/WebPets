@@ -20,56 +20,68 @@ export default function SpriteAnimator({ evolution_id, direction, flipInterval =
   // For eggs, always use "F"
   const actualDirection = isEgg ? "F" : direction;
 
-  // Load F textures (always needed)
-  const url_F_0 = spriteUrlMap[getSpriteUrl(evolution_id[0], evolution_id[1], "F", 0)];
-  const url_F_1 = spriteUrlMap[getSpriteUrl(evolution_id[0], evolution_id[1], "F", 1)];
-  const texture_F_0 = useTexture(url_F_0);
-  const texture_F_1 = useTexture(url_F_1);
-  console.log("SpriteAnimator loading:", url_F_0);
-  console.log("SpriteAnimator loading:", url_F_1);
-  const texturesF = [texture_F_0, texture_F_1];
+  // Generate URLs for all possible textures
+  const url_F_0 = getSpriteUrl(evolution_id[0], evolution_id[1], "F", 0);
+  const url_F_1 = getSpriteUrl(evolution_id[0], evolution_id[1], "F", 1);
+  const url_U_0 = getSpriteUrl(evolution_id[0], evolution_id[1], "U", 0);
+  const url_U_1 = getSpriteUrl(evolution_id[0], evolution_id[1], "U", 1);
+  const url_R_0 = getSpriteUrl(evolution_id[0], evolution_id[1], "R", 0);
+  const url_R_1 = getSpriteUrl(evolution_id[0], evolution_id[1], "R", 1);
+  const url_L_0 = getSpriteUrl(evolution_id[0], evolution_id[1], "L", 0);
+  const url_L_1 = getSpriteUrl(evolution_id[0], evolution_id[1], "L", 1);
 
-  let texturesU, texturesR, texturesL;
-  if (!isEgg) {
-    // Load additional directions only if not an egg
-    const url_U_0 = spriteUrlMap[getSpriteUrl(evolution_id[0], evolution_id[1], "U", 0)];
-    const url_U_1 = spriteUrlMap[getSpriteUrl(evolution_id[0], evolution_id[1], "U", 1)];
-    const texture_U_0 = useTexture(url_U_0);
-    const texture_U_1 = useTexture(url_U_1);
-    texturesU = [texture_U_0, texture_U_1];
+  // Check which URLs actually exist in the sprite map
+  const actualUrl_F_0 = spriteUrlMap[url_F_0];
+  const actualUrl_F_1 = spriteUrlMap[url_F_1];
+  const actualUrl_U_0 = spriteUrlMap[url_U_0];
+  const actualUrl_U_1 = spriteUrlMap[url_U_1];
+  const actualUrl_R_0 = spriteUrlMap[url_R_0];
+  const actualUrl_R_1 = spriteUrlMap[url_R_1];
+  const actualUrl_L_0 = spriteUrlMap[url_L_0];
+  const actualUrl_L_1 = spriteUrlMap[url_L_1];
 
-    const url_R_0 = spriteUrlMap[getSpriteUrl(evolution_id[0], evolution_id[1], "R", 0)];
-    const url_R_1 = spriteUrlMap[getSpriteUrl(evolution_id[0], evolution_id[1], "R", 1)];
-    const texture_R_0 = useTexture(url_R_0);
-    const texture_R_1 = useTexture(url_R_1);
-    texturesR = [texture_R_0, texture_R_1];
+  console.log("🎨 SpriteAnimator DEBUG:");
+  console.log("  evolution_id:", evolution_id, "isEgg:", isEgg, "actualDirection:", actualDirection);
+  console.log("  Generated URLs:");
+  console.log("    F_0:", url_F_0, "exists:", !!actualUrl_F_0);
+  console.log("    F_1:", url_F_1, "exists:", !!actualUrl_F_1);
+  console.log("  Actual URLs:");
+  console.log("    F_0:", actualUrl_F_0);
+  console.log("    F_1:", actualUrl_F_1);
 
-    const url_L_0 = spriteUrlMap[getSpriteUrl(evolution_id[0], evolution_id[1], "L", 0)];
-    const url_L_1 = spriteUrlMap[getSpriteUrl(evolution_id[0], evolution_id[1], "L", 1)];
-    const texture_L_0 = useTexture(url_L_0);
-    const texture_L_1 = useTexture(url_L_1);
-    texturesL = [texture_L_0, texture_L_1];
-  } else {
-    // For eggs, reuse the F textures.
-    texturesU = texturesF;
-    texturesR = texturesF;
-    texturesL = texturesF;
-  }
+  // Always load F textures (required for all pets)
+  const textures_F = useTexture([actualUrl_F_0, actualUrl_F_1]);
+  
+  // For other directions, use F as fallback if they don't exist
+  const textures_U = useTexture([
+    actualUrl_U_0 || actualUrl_F_0, 
+    actualUrl_U_1 || actualUrl_F_1
+  ]);
+  const textures_R = useTexture([
+    actualUrl_R_0 || actualUrl_F_0, 
+    actualUrl_R_1 || actualUrl_F_1
+  ]);
+  const textures_L = useTexture([
+    actualUrl_L_0 || actualUrl_F_0, 
+    actualUrl_L_1 || actualUrl_F_1
+  ]);
 
   // Set texture filters for crisp pixel art.
-  const allTextures = [...texturesF, ...texturesU, ...texturesR, ...texturesL];
+  const allTextures = [...textures_F, ...textures_U, ...textures_R, ...textures_L];
   allTextures.forEach((tex) => {
-    tex.minFilter = THREE.NearestFilter;
-    tex.magFilter = THREE.NearestFilter;
-    tex.colorSpace = THREE.SRGBColorSpace;
+    if (tex) {
+      tex.minFilter = THREE.NearestFilter;
+      tex.magFilter = THREE.NearestFilter;
+      tex.colorSpace = THREE.SRGBColorSpace;
+    }
   });
 
   // Organize textures by direction.
   const textures = {
-    F: texturesF,
-    U: texturesU,
-    R: texturesR,
-    L: texturesL,
+    F: textures_F,
+    U: textures_U,
+    R: textures_R,
+    L: textures_L,
   };
 
   // Animation state.
