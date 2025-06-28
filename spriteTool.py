@@ -55,8 +55,8 @@ def print_options(options):
     print()
 
 def main():
-    # Navigate to virtual-varmints/public/sprites relative to the execution directory.
-    target_dir = os.path.join(os.getcwd(), "virtual-varmints", "public", "sprites")
+    # Navigate to frontEnd/src/sprites relative to the execution directory.
+    target_dir = os.path.join(os.getcwd(), "frontEnd", "src", "sprites")
     if os.path.isdir(target_dir):
         os.chdir(target_dir)
         print("Changed directory to:", os.getcwd())

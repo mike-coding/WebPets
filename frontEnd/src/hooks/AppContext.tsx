@@ -63,7 +63,11 @@ export const useAppStore = create<AppState>((set, get) => ({
       body: JSON.stringify(updatedUserData),
     })
       .then((res) => res.json())
-      .then((serverData) => set({ userData: serverData }))
+      .then((serverData) => {
+        // Extract the data portion from the full user response
+        const userData = serverData.data || serverData;
+        set({ userData });
+      })
       .catch((err) => {
         console.error("Error updating userData:", err);
         // Optionally revert the optimistic update here.

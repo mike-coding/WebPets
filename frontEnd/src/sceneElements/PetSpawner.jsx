@@ -11,7 +11,7 @@ export default function PetSpawner() {
   return (
     <>
       {userData.pets.map((pet, index) => (
-        <Pet key={pet.id || `temp-${index}`} petInfo={pet} bounds={{ x: [-8, 8], y: [-6, 6] }}/>
+        <Pet key={pet.id || `temp-${index}`} petInfo={pet} bounds={{ x: [-1.5, 1.5], y: [-3, 3] }}/>
       ))}
     </>
   );

@@ -3,16 +3,16 @@ import { useFrame } from "@react-three/fiber";
 import { useTexture } from "@react-three/drei";
 import * as THREE from "three";
 
-const spriteModules = import.meta.glob('/src/sprites/pets/*/*/*/*.png', { eager: true });
+const spriteModules = import.meta.glob('/src/sprites/pets/*/*/*.png', { eager: true });
 const spriteUrlMap = {};
 for (const [path, mod] of Object.entries(spriteModules)) {
-  // path: '/src/sprites/pets/0/1/F/0.png'
+  // path: '/src/sprites/pets/1/3/F_0.png'
   spriteUrlMap[path] = mod.default;
 }
 
 // Helper to get the correct URL
 function getSpriteUrl(e0, e1, dir, frame) {
-  return `/src/sprites/pets/${e0}/${e1}/${dir}/${frame}.png`;
+  return `/src/sprites/pets/${e0}/${e1}/${dir}_${frame}.png`;
 }
 
 export default function SpriteAnimator({ evolution_id, direction, flipInterval = 0.5, onClick }) {

@@ -3,23 +3,54 @@ import { useFrame, useThree, extend } from "@react-three/fiber";
 import { Billboard, useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import SpriteAnimator from "./SpriteAnimator.jsx";
-import { useNavigationContext } from "../hooks/AppContext";
+import { useNavigationContext, useUserDataContext } from "../hooks/AppContext";
 
 export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
   const groupRef = useRef();
   const { navigateTo } = useNavigationContext();
+  const { updatePetData } = useUserDataContext();
   const fixedZ = 0.2;
   const speed = 2;
   const [target, setTarget] = useState(new THREE.Vector2());
-  const [direction, setDirection] = useState("F");  const handleClick = (event) => {
+  const [direction, setDirection] = useState("F");
+  
+  // Track if we've already checked for hatching to avoid repeated checks
+  const hasCheckedHatching = useRef(false);
+  const handleClick = (event) => {
     event.stopPropagation();
     navigateTo("petSummary", null, petInfo.id);
+  };
+
+  // Check if egg should hatch (age > 1 minute = 60000ms)
+  const checkForHatching = () => {
+    if (hasCheckedHatching.current) return; // Already checked this frame cycle
+    
+    const isEgg = petInfo.evolution_id[0] === 0;
+    if (!isEgg) return; // Not an egg, no need to check
+    
+    const now = Date.now();
+    const ageMs = now - petInfo.createdAt;
+    const oneMinuteMs = 20 * 1000; // 1 minute in milliseconds
+    
+    if (ageMs > oneMinuteMs) {
+      console.log(`🥚➡️🐾 HATCHING! Pet ${petInfo.id} (age: ${ageMs}ms)`);
+      
+      // Hatch the egg by changing evolution_id[0] from 0 to 1
+      const newEvolutionId = [1, petInfo.evolution_id[1]];
+      updatePetData(petInfo.id, { evolution_id: newEvolutionId });
+      
+      hasCheckedHatching.current = true; // Mark as checked
+    }
   };
 
   useEffect(() => {
     if (groupRef.current) {
       groupRef.current.position.set(0, 0, fixedZ);
     }
+    
+    // Reset hatching check when petInfo changes
+    hasCheckedHatching.current = false;
+    
     if (petInfo.evolution_id[0] === 0) {
       setTarget(new THREE.Vector2(0, 0));
       setDirection("F");
@@ -30,13 +61,17 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
       );
       setTarget(newTarget);
     }
-  }, [bounds, fixedZ, petInfo.evolution_id]);
+  }, [bounds, fixedZ, petInfo.evolution_id, petInfo.id]);
 
   const deltaRef = useRef(0);
 
   useFrame((state, delta) => {
     const clampedDelta = Math.min(delta, 0.1);
     deltaRef.current = clampedDelta;
+    
+    // Check for hatching on every frame (but only process once per pet)
+    checkForHatching();
+    
     if (petInfo.evolution_id[0] === 0) return;
     if (!groupRef.current) return;
 
@@ -57,8 +92,16 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
         THREE.MathUtils.randFloatSpread(6)
       );
       if (offset.length() > 3) offset.setLength(3);
-      const newX = THREE.MathUtils.clamp(currentXY.x + offset.x, bounds.x[0], bounds.x[1]);
-      const newY = THREE.MathUtils.clamp(currentXY.y + offset.y, bounds.y[0], bounds.y[1]);
+      const newX = THREE.MathUtils.clamp(
+        currentXY.x + offset.x,
+        bounds.x[0],
+        bounds.x[1]
+      );
+      const newY = THREE.MathUtils.clamp(
+        currentXY.y + offset.y,
+        bounds.y[0],
+        bounds.y[1]
+      );
       setTarget(new THREE.Vector2(newX, newY));
     } else {
       toTarget.normalize();
@@ -67,7 +110,7 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
       currentXY.add(toTarget.multiplyScalar(scaledSpeed * clampedDelta));
       groupRef.current.position.set(currentXY.x, currentXY.y, fixedZ);
     }
-  });  
+  });
   console.log("Pet render", performance.now(), petInfo);
   return (
     <group ref={groupRef} onClick={handleClick}>
