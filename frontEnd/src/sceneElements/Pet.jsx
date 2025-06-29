@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
-import { useFrame, useThree, extend } from "@react-three/fiber";
-import { Billboard, useTexture } from "@react-three/drei";
+import { useFrame } from "@react-three/fiber";
+import { Billboard } from "@react-three/drei";
 import * as THREE from "three";
 import SpriteAnimator from "./SpriteAnimator.jsx";
 import { useNavigationContext, useUserDataContext } from "../hooks/AppContext";
@@ -10,19 +10,26 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
   const { navigateTo } = useNavigationContext();
   const { updatePetData } = useUserDataContext();
   const fixedZ = 0.2;
-  const speed = 0.6;
+  const speed = 0.8;
   const egg_incubation_minutes = 5;
+  
+  // Constants
+  const DELTA_CLAMP = 0.1;
+  const MS_TO_HOURS = 1000 * 60 * 60;
+  const MS_PER_MINUTE = 60000;
   
   // Movement behavior constants
   const MIN_SPEED_THRESHOLD = 0.0001;      // Speed below which we pick new direction
   const NEW_DIRECTION_SPREAD = Math.PI;  // Angular spread for new directions (radians)
   const EASING_POWER = 3;                // Cubic easing for smooth deceleration
   const PROGRESS_RATE = 0.01;            // How fast progress advances per frame (0.01 = slow, 0.05 = fast)
+  const WAIT_TIME_RANGE = 2000;          // Max wait time in MS after stopping (0 to this value)
   
   const [direction, setDirection] = useState("F");
   const [movementDirection, setMovementDirection] = useState(new THREE.Vector2(1, 0)); // Unit vector
   const [movementProgress, setMovementProgress] = useState(0); // 0 to 1 progress through current movement
   const [currentSpeed, setCurrentSpeed] = useState(speed);
+  const [waitUntil, setWaitUntil] = useState(0); // Timestamp when pet should start moving again
   
   // Degradation constants
   const HUNGER_DEGRADATION_PER_HOUR = 0.1;    // Hunger increases by 0.1 per hour
@@ -48,7 +55,7 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
     
     const now = Date.now();
     const ageMs = now - petInfo.createdAt;
-    const incubation_ms = egg_incubation_minutes * 60000; // 60000ms = 1 minute
+    const incubation_ms = egg_incubation_minutes * MS_PER_MINUTE;
     
     if (ageMs > incubation_ms) {
       // Hatch the egg by changing evolution_id[0] from 0 to 1
@@ -73,8 +80,7 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
       
       // Apply degradation every 30 seconds for reasonable real-time updates
       if (timeSinceLastDegradation > DEGRADATION_UPDATE_INTERVAL) {
-        const timeElapsedMs = timeSinceLastDegradation;
-        const hoursElapsed = timeElapsedMs / (1000 * 60 * 60);
+        const hoursElapsed = timeSinceLastDegradation / MS_TO_HOURS;
         
         const hungerIncrease = HUNGER_DEGRADATION_PER_HOUR * hoursElapsed;
         const happinessDecrease = HAPPINESS_DEGRADATION_PER_HOUR * hoursElapsed;
@@ -117,7 +123,21 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
     
     // Check if we should pick a new direction
     if (newSpeed < MIN_SPEED_THRESHOLD) {
-      // Pick new random direction and reset progress
+      const currentTime = Date.now();
+      
+      // If we haven't set a wait time yet, set one
+      if (waitUntil === 0) {
+        const waitTime = Math.random() * WAIT_TIME_RANGE;
+        setWaitUntil(currentTime + waitTime);
+        return; // Start waiting
+      }
+      
+      // If we're still waiting, don't move
+      if (currentTime < waitUntil) {
+        return; // Still waiting
+      }
+      
+      // Wait time is over, pick new direction and reset
       const baseAngle = Math.atan2(movementDirection.y, movementDirection.x);
       const angleOffset = (Math.random() - 0.5) * NEW_DIRECTION_SPREAD;
       const newAngle = baseAngle + angleOffset;
@@ -125,22 +145,20 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
       
       setMovementDirection(newDirection);
       setMovementProgress(0); // Reset movement progress
+      setWaitUntil(0); // Reset wait timer
     } else {
       // Move in current direction
       const velocity = movementDirection.clone().multiplyScalar(newSpeed * clampedDelta);
       const newPos = currentXY.add(velocity);
       
       // Clamp to bounds and handle bouncing
-      let bounced = false;
       if (newPos.x < bounds.x[0] || newPos.x > bounds.x[1]) {
         setMovementDirection(new THREE.Vector2(-movementDirection.x, movementDirection.y));
         newPos.x = THREE.MathUtils.clamp(newPos.x, bounds.x[0], bounds.x[1]);
-        bounced = true;
       }
       if (newPos.y < bounds.y[0] || newPos.y > bounds.y[1]) {
         setMovementDirection(new THREE.Vector2(movementDirection.x, -movementDirection.y));
         newPos.y = THREE.MathUtils.clamp(newPos.y, bounds.y[0], bounds.y[1]);
-        bounced = true;
       }
       
       groupRef.current.position.set(newPos.x, newPos.y, fixedZ);
@@ -164,10 +182,8 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
     }
   }, []); // Only run once on mount
 
-  const deltaRef = useRef(0);
-
   useFrame((state, delta) => {
-    const clampedDelta = Math.min(delta, 0.1);
+    const clampedDelta = Math.min(delta, DELTA_CLAMP);
     
     // Check for hatching on every frame (but only process once per pet)
     checkForHatching();
@@ -181,8 +197,7 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
     // Handle pet movement
     handleMovement(clampedDelta);
   });
-  console.log("Pet render", performance.now(), "petInfo:", petInfo);
-  console.log("  Pet evolution_id:", petInfo.evolution_id, "id:", petInfo.id);
+  
   return (
     <group ref={groupRef} onClick={handleClick}>
       <Billboard follow={true}>

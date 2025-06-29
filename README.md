@@ -1,4 +1,4 @@
-# WEBPETS v0.0.2 ALPHA
+# WEBPETS v0.0.3 ALPHA
 
 This is intended to be a continuation of bitbeast arena, reimagined as a MOBILE in-browser virtual pet game. I'm not sure where exactly this thing will end up. A little bit of neopets, a lot of tamagotchi, some digimon. 
 
@@ -7,9 +7,9 @@ We're very much in the early stages here still, but I'm stoked about the accessi
 ## Targets before v0.0.3
 * [ ] Egg hatching & animation
 * [ ] Bug Fixes
-    * [ ] Name update bug
+    * [x] Name update bug
     * [ ] Element size responsiveness on various devices
-* [ ] Happiness, hunger degradation
+* [x] Happiness, hunger degradation
 * [ ] Feeding
 * [ ] Pet metabolism (pooping!!!)
 

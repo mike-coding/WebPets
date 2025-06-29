@@ -12,7 +12,7 @@ function UIOverlay() {
     <>
       <div className="__versionDisplay absolute top-0 left-0 w-full pointer-events-none">
         <div className="absolute z-10 w-full py-[0.75vh] px-2 font-m6x11 text-white text-xl">
-          v0.0.2 ALPHA
+          v0.0.3 ALPHA
         </div>
       </div>        
       {navigation.activePage === "mainMenu" ? (
