@@ -101,7 +101,9 @@ export default function SpriteAnimator({ evolution_id, direction, flipInterval =
       setFrameIndex((prev) => (prev + 1) % textures[actualDirection].length);
       timeAccumulator.current = 0;
     }
-  });    return (
+  });
+  
+  return (
     <sprite scale={[1, 1, 1]}>
       <spriteMaterial attach="material" map={textures[actualDirection][frameIndex]} transparent />
     </sprite>
