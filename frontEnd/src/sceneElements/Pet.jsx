@@ -16,7 +16,7 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
   // Movement behavior constants
   const MIN_SPEED_THRESHOLD = 0.0001;      // Speed below which we pick new direction
   const NEW_DIRECTION_SPREAD = Math.PI;  // Angular spread for new directions (radians)
-  const EASING_POWER = 4;                // Cubic easing for smooth deceleration
+  const EASING_POWER = 3;                // Cubic easing for smooth deceleration
   const PROGRESS_RATE = 0.01;            // How fast progress advances per frame (0.01 = slow, 0.05 = fast)
   
   const [direction, setDirection] = useState("F");
@@ -31,6 +31,9 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
   
   // Track if we've already checked for hatching to avoid repeated checks
   const hasCheckedHatching = useRef(false);
+  
+  // Track last degradation time for real-time updates
+  const lastDegradationTime = useRef(null);
   const handleClick = (event) => {
     event.stopPropagation();
     navigateTo("petSummary", null, petInfo.id);
@@ -48,8 +51,6 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
     const incubation_ms = egg_incubation_minutes * 60000; // 60000ms = 1 minute
     
     if (ageMs > incubation_ms) {
-      console.log(`🥚➡️🐾 HATCHING! Pet ${petInfo.id} (age: ${ageMs}ms)`);
-      
       // Hatch the egg by changing evolution_id[0] from 0 to 1
       const newEvolutionId = [1, petInfo.evolution_id[1]];
       updatePetData(petInfo.id, { evolution_id: newEvolutionId });
@@ -58,58 +59,48 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
     }
   };
 
-  // Initialize position and first movement direction
-  useEffect(() => {
-    if (groupRef.current) {
-      groupRef.current.position.set(0, 0, fixedZ);
-      // Start with random direction
-      const angle = Math.random() * Math.PI * 2;
-      setMovementDirection(new THREE.Vector2(Math.cos(angle), Math.sin(angle)));
-    }
+  // Handle degradation logic
+  const handleDegradation = () => {
+    const currentTime = Date.now();
     
-    // Apply degradation on mount if time has passed
-    const applyDegradation = () => {
-      if (!petInfo.lastUpdate) {
-        // If no lastUpdate, set it to now
-        updatePetData(petInfo.id, { lastUpdate: Date.now() });
-        return;
+    if (petInfo.lastUpdate) {
+      // Initialize lastDegradationTime from server data on first run
+      if (lastDegradationTime.current === null) {
+        lastDegradationTime.current = petInfo.lastUpdate;
       }
       
-      const currentTime = Date.now();
-      const timeElapsedMs = currentTime - petInfo.lastUpdate;
-      const hoursElapsed = timeElapsedMs / (1000 * 60 * 60);
+      const timeSinceLastDegradation = currentTime - lastDegradationTime.current;
       
-      if (hoursElapsed > 0.01) { // Only apply if more than ~36 seconds have passed
-        const newHunger = Math.min(1.0, petInfo.hunger + (HUNGER_DEGRADATION_PER_HOUR * hoursElapsed));
-        const newHappiness = Math.max(0.0, petInfo.happiness - (HAPPINESS_DEGRADATION_PER_HOUR * hoursElapsed));
+      // Apply degradation every 30 seconds for reasonable real-time updates
+      if (timeSinceLastDegradation > DEGRADATION_UPDATE_INTERVAL) {
+        const timeElapsedMs = timeSinceLastDegradation;
+        const hoursElapsed = timeElapsedMs / (1000 * 60 * 60);
+        
+        const hungerIncrease = HUNGER_DEGRADATION_PER_HOUR * hoursElapsed;
+        const happinessDecrease = HAPPINESS_DEGRADATION_PER_HOUR * hoursElapsed;
+        
+        const newHunger = Math.min(1.0, petInfo.hunger + hungerIncrease);
+        const newHappiness = Math.max(0.0, petInfo.happiness - happinessDecrease);
+        
+        console.log(`Pet ${petInfo.id}: Degradation update - ${hoursElapsed.toFixed(3)} hours elapsed - Hunger: ${petInfo.hunger.toFixed(3)} -> ${newHunger.toFixed(3)}, Happiness: ${petInfo.happiness.toFixed(3)} -> ${newHappiness.toFixed(3)}`);
         
         updatePetData(petInfo.id, {
           hunger: newHunger,
           happiness: newHappiness,
           lastUpdate: currentTime
         });
+        
+        lastDegradationTime.current = currentTime;
       }
-    };
-    
-    applyDegradation();
-    
-    // Set up interval to update lastUpdate periodically
-    const degradationInterval = setInterval(() => {
-      updatePetData(petInfo.id, { lastUpdate: Date.now() });
-    }, DEGRADATION_UPDATE_INTERVAL);
-    
-    return () => clearInterval(degradationInterval);
-  }, [petInfo.id, petInfo.lastUpdate, petInfo.hunger, petInfo.happiness, updatePetData]);
+    } else {
+      // Initialize lastUpdate if not set
+      updatePetData(petInfo.id, { lastUpdate: currentTime });
+      lastDegradationTime.current = currentTime;
+    }
+  };
 
-  const deltaRef = useRef(0);
-
-  useFrame((state, delta) => {
-    const clampedDelta = Math.min(delta, 0.1);
-    
-    // Check for hatching on every frame (but only process once per pet)
-    checkForHatching();
-    
-    if (petInfo.evolution_id[0] === 0) return;
+  // Handle pet movement logic
+  const handleMovement = (clampedDelta) => {
     if (!groupRef.current) return;
 
     const pos = groupRef.current.position;
@@ -161,6 +152,34 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
     } else {
       setDirection(movementDirection.y > 0 ? "U" : "F");
     }
+  };
+
+  // Initialize position and first movement direction
+  useEffect(() => {
+    if (groupRef.current) {
+      groupRef.current.position.set(0, 0, fixedZ);
+      // Start with random direction
+      const angle = Math.random() * Math.PI * 2;
+      setMovementDirection(new THREE.Vector2(Math.cos(angle), Math.sin(angle)));
+    }
+  }, []); // Only run once on mount
+
+  const deltaRef = useRef(0);
+
+  useFrame((state, delta) => {
+    const clampedDelta = Math.min(delta, 0.1);
+    
+    // Check for hatching on every frame (but only process once per pet)
+    checkForHatching();
+    
+    // Handle degradation logic
+    handleDegradation();
+    
+    // Skip movement for eggs
+    if (petInfo.evolution_id[0] === 0) return;
+    
+    // Handle pet movement
+    handleMovement(clampedDelta);
   });
   console.log("Pet render", performance.now(), "petInfo:", petInfo);
   console.log("  Pet evolution_id:", petInfo.evolution_id, "id:", petInfo.id);
