@@ -48,6 +48,7 @@ class pet(db.Model):
     happiness = db.Column(db.Float, default=0.5) # float from 0 - 1
     abilities = db.Column(db.String(200), default="") # comma-separated string
     created_at = db.Column(db.BigInteger, nullable=True) # timestamp in milliseconds
+    last_update = db.Column(db.BigInteger, nullable=True) # timestamp in milliseconds for degradation tracking
 
     def to_dict(self):
         return {
@@ -60,7 +61,8 @@ class pet(db.Model):
             "hunger": self.hunger,
             "happiness": self.happiness,
             "abilities": self.abilities.split(",") if self.abilities else [],
-            "createdAt": self.created_at
+            "createdAt": self.created_at,
+            "lastUpdate": self.last_update
         }
 
     @classmethod
@@ -79,6 +81,7 @@ class pet(db.Model):
                 pet.hunger = pet_data.get("hunger", pet.hunger)
                 pet.happiness = pet_data.get("happiness", pet.happiness)
                 pet.created_at = pet_data.get("createdAt", pet.created_at)
+                pet.last_update = pet_data.get("lastUpdate", pet.last_update)
                 # Handle abilities: if provided as a list, join into a comma-separated string.
                 abilities = pet_data.get("abilities")
                 if abilities is not None:
@@ -97,6 +100,7 @@ class pet(db.Model):
         hunger = pet_data.get("hunger", 0.5)
         happiness = pet_data.get("happiness", 0.5)
         created_at = pet_data.get("createdAt")
+        last_update = pet_data.get("lastUpdate")
         abilities = pet_data.get("abilities", [])
         if isinstance(abilities, list):
             abilities = ",".join(abilities)
@@ -116,7 +120,9 @@ class pet(db.Model):
             hunger=hunger,
             happiness=happiness,
             abilities=abilities,
-            created_at=created_at
+            created_at=created_at,
+            last_update=last_update
+
         )
         db.session.add(new_pet)
         return new_pet

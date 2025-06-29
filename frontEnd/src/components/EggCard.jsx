@@ -26,7 +26,8 @@ function EggCard({ egg_id, hoverTip }) {
         hunger: 0.5,
         happiness: 0.5,
         abilities: [],
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        lastUpdate: Date.now()
       };
 
       if (userData) {

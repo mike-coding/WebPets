@@ -40,12 +40,10 @@ export function useSubmitAuth() {
             setUserData(transformedData);
             console.log("setUserData called", performance.now());
             const targetSubpage = transformedData.completed_tutorial ? "default" : "tutorial";
-            if (targetSubpage === "default") {
-              // for some reason, this fixes the login delay before rendering a pet.
-              // BE VERY CAREFUL MESSING AROUND WITH THIS SCRIPT UNLESS YOU WANT TO BANG YOUR HEAD AGAINST THE WALL FOR HOURS.
-              // I HAVE SPENT A COLLECTIVE 10+ HOURS ON THIS SMALL ~300MS HANG. 
-              await sleep(0);
-            }
+            // WARNING: PLEASE DO NOT REMOVE THE FOLLOWING LINE
+            // This sleep call allows state to catch up before navigation
+            // Without it, there is a weird delay before the pet is rendered on login
+            await sleep(0);
             navigateTo('main', targetSubpage);
           } else if (status === 401) {
             setAuthFeedback('Invalid password');

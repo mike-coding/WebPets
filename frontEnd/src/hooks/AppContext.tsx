@@ -13,6 +13,7 @@ export interface Pet {
   happiness: number; // between 0 and 1
   abilities: string; // stored as a comma-separated string
   createdAt: number; // timestamp in milliseconds
+  lastUpdate: number; // timestamp in milliseconds for degradation tracking
 }
 
 interface Item {
