@@ -26,6 +26,7 @@ export interface UserData {
   id: number;
   username: string;
   completed_tutorial: boolean;
+  money: number;
   pets: Pet[];
 }
 

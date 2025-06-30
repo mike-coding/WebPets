@@ -4,6 +4,7 @@ import MainMenu from './MainMenu';
 import TutorialUI from './TutorialUI';
 import HomeUI from './HomeUI';
 import PetSummary from './PetSummary';
+import InventoryUI from './InventoryUI';
 
 function UIOverlay() {
   const { navigation } = useNavigationContext();
@@ -24,6 +25,11 @@ function UIOverlay() {
       ) : navigation.activePage === "petSummary" ? (
         <>
           <PetSummary/>
+          <HomeUI/>
+        </>
+      ) : navigation.activePage === "inventory" ? (
+        <>
+          <InventoryUI/>
           <HomeUI/>
         </>
       ) : (

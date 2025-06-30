@@ -54,8 +54,8 @@ function PetSummary() {
     goBack();
     return null;
   }  return (
-    <div className="w-full h-full flex flex-col justify-center pointer-events-auto p-4 text-white font-m6x11 ">
-      <div className="bg-gray-300/10 rounded-lg p-4 backdrop-blur-xs shadow-xl">        
+    <div className="w-full h-full flex flex-col justify-center pointer-events-auto p-4 text-white font-m6x11 bg-black/40">
+      <div className="bg-gray-300/10 rounded-lg p-4 backdrop-blur-xs shadow-xl backdrop-brightness-140">        
         <div className="flex justify-between items-center mb-4">          
           <input
             type="text"

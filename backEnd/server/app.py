@@ -13,6 +13,7 @@ db = SQLAlchemy(app)
 # Models
 # ---------------------------
 class User(db.Model):
+    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
@@ -27,16 +28,111 @@ class UserData(db.Model):
     # Use the same primary key as the User id
     id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
     completed_tutorial = db.Column(db.Boolean, default=False)
-    # One-to-many relationship with pets
-    pets = db.relationship('pet', backref='user_data', lazy=True)
+    money = db.Column(db.Integer, default=0)
+    pets = db.relationship('Pet', backref='user_data', lazy=True)
+    home_objects = db.relationship('HomeObject', backref='user_data', lazy=True)
+    inventory = db.relationship('InventoryItem', backref='user_data', lazy=True)
 
     def to_dict(self):
         return {
             "completed_tutorial": self.completed_tutorial,
-            "pets": [pet.to_dict() for pet in self.pets]
+            "money": self.money,
+            "pets": [pet.to_dict() for pet in self.pets],
+            "home_objects": [obj.to_dict() for obj in self.home_objects],
+            "inventory": [inv.to_dict() for inv in self.inventory]
+        }
+    
+class HomeObject(db.Model):
+    __tablename__ = 'home_object'
+    id = db.Column(db.Integer, primary_key=True)
+    user_data_id = db.Column(db.Integer, db.ForeignKey('user_data.id'), nullable=True)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_data_id": self.user_data_id
+        }
+    
+    @classmethod
+    def process_json(cls, home_object_data, user_data_id):
+        """
+        Given a dictionary of home object data and a parent user_data_id,
+        either update an existing home object (if "id" exists) or create a new one.
+        """
+        if "id" in home_object_data:
+            home_obj = cls.query.get(home_object_data["id"])
+            if home_obj and home_obj.user_data_id == user_data_id:
+                # Update existing home object (currently minimal fields)
+                return home_obj
+        
+        # Create new home object
+        new_home_obj = cls(user_data_id=user_data_id)
+        db.session.add(new_home_obj)
+        return new_home_obj
+
+class Item(db.Model):
+    """Master catalog of all possible items"""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    category = db.Column(db.String(50))  # 'food', 'toy', 'decoration', etc.
+    description = db.Column(db.Text)
+    price = db.Column(db.Integer, default=0)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "category": self.category,
+            "description": self.description,
+            "price": self.price
         }
 
-class pet(db.Model):
+class InventoryItem(db.Model):
+    """Junction table: represents a single item-quantity pair in a user's inventory"""
+    __tablename__ = 'inventory_item'
+    id = db.Column(db.Integer, primary_key=True)
+    user_data_id = db.Column(db.Integer, db.ForeignKey('user_data.id'), nullable=False)
+    item_id = db.Column(db.Integer, db.ForeignKey('item.id'), nullable=False)
+    quantity = db.Column(db.Integer, default=1)
+    # Relationship to get item details
+    item = db.relationship('Item', backref='inventory_entries')
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_data_id": self.user_data_id,
+            "item_id": self.item_id,
+            "quantity": self.quantity,
+            "item": self.item.to_dict() if self.item else None
+        }
+    
+    @classmethod
+    def process_json(cls, inventory_data, user_data_id):
+        """
+        Given a dictionary of inventory data and a parent user_data_id,
+        either update an existing inventory item (if "id" exists) or create a new one.
+        """
+        if "id" in inventory_data:
+            inv_item = cls.query.get(inventory_data["id"])
+            if inv_item and inv_item.user_data_id == user_data_id:
+                # Update existing inventory item
+                inv_item.quantity = inventory_data.get("quantity", inv_item.quantity)
+                inv_item.item_id = inventory_data.get("item_id", inv_item.item_id)
+                return inv_item
+        
+        # Create new inventory item
+        item_id = inventory_data.get("item_id")
+        quantity = inventory_data.get("quantity", 1)
+        
+        new_inv_item = cls(
+            user_data_id=user_data_id,
+            item_id=item_id,
+            quantity=quantity
+        )
+        db.session.add(new_inv_item)
+        return new_inv_item
+
+class Pet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_data_id = db.Column(db.Integer, db.ForeignKey('user_data.id'), nullable=True)
     evolution_line = db.Column(db.Integer, default=0)
@@ -128,7 +224,6 @@ class pet(db.Model):
         return new_pet
 
 
-
 with app.app_context():
     db.create_all()
 
@@ -155,7 +250,7 @@ def register():
     db.session.flush()  # Get new_user.id without committing yet
 
     # Create associated UserData for this new user
-    new_user_data = UserData(id=new_user.id, completed_tutorial=False)
+    new_user_data = UserData(id=new_user.id, completed_tutorial=False, money=0)
     db.session.add(new_user_data)
     db.session.commit()
 
@@ -212,12 +307,31 @@ def update_userdata(user_id):
         user.data.completed_tutorial = data['completed_tutorial']
         print(f"Updated completed_tutorial to: {data['completed_tutorial']}")
 
-    # Process pets if provided using our helper function.
+    # Update money if provided
+    if 'money' in data:
+        user.data.money = data['money']
+        print(f"Updated money to: {data['money']}")
+
+    # Process pets if provided using our helper function
     if 'pets' in data:
         print(f"Processing {len(data['pets'])} pets")
         for pet_data in data['pets']:
             print(f"Processing pet data: {pet_data}")
-            pet.process_json(pet_data, user.data.id)
+            Pet.process_json(pet_data, user.data.id)
+
+    # Process home objects if provided
+    if 'home_objects' in data:
+        print(f"Processing {len(data['home_objects'])} home objects")
+        for home_obj_data in data['home_objects']:
+            print(f"Processing home object data: {home_obj_data}")
+            HomeObject.process_json(home_obj_data, user.data.id)
+
+    # Process inventory if provided
+    if 'inventory' in data:
+        print(f"Processing {len(data['inventory'])} inventory items")
+        for inv_data in data['inventory']:
+            print(f"Processing inventory data: {inv_data}")
+            InventoryItem.process_json(inv_data, user.data.id)
 
     db.session.commit()
     
@@ -230,7 +344,10 @@ def update_userdata(user_id):
         "id": result["id"],
         "username": result["username"], 
         "completed_tutorial": result["data"]["completed_tutorial"],
-        "pets": result["data"]["pets"]
+        "money": result["data"]["money"],
+        "pets": result["data"]["pets"],
+        "home_objects": result["data"]["home_objects"],
+        "inventory": result["data"]["inventory"]
     }
     
     return jsonify(response_data), 200
