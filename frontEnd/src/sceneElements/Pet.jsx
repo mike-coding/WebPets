@@ -11,7 +11,7 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
   const { updatePetData } = useUserDataContext();
   const fixedZ = 0.2;
   const speed = 0.8;
-  const egg_incubation_minutes = 5;
+  const egg_incubation_minutes = 0.3;
   
   // Constants
   const DELTA_CLAMP = 0.1;
@@ -19,7 +19,7 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
   const MS_PER_MINUTE = 60000;
   
   // Movement behavior constants
-  const MIN_SPEED_THRESHOLD = 0.0001;      // Speed below which we pick new direction
+  const MIN_SPEED_THRESHOLD = 0.0001;    // Speed below which we pick new direction
   const NEW_DIRECTION_SPREAD = Math.PI;  // Angular spread for new directions (radians)
   const EASING_POWER = 3;                // Cubic easing for smooth deceleration
   const PROGRESS_RATE = 0.01;            // How fast progress advances per frame (0.01 = slow, 0.05 = fast)
@@ -32,8 +32,8 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
   const [waitUntil, setWaitUntil] = useState(0); // Timestamp when pet should start moving again
   
   // Degradation constants
-  const HUNGER_DEGRADATION_PER_HOUR = 0.1;    // Hunger increases by 0.1 per hour
-  const HAPPINESS_DEGRADATION_PER_HOUR = 0.05; // Happiness decreases by 0.05 per hour
+  const HUNGER_DEGRADATION_PER_HOUR = 0.1;     // Hunger increases by 0.1 per hour
+  const HAPPINESS_DEGRADATION_PER_HOUR = 0.025; // Happiness decreases by 0.05 per hour
   const DEGRADATION_UPDATE_INTERVAL = 30000;   // Update every 30 seconds
   
   // Track if we've already checked for hatching to avoid repeated checks
@@ -184,17 +184,9 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
 
   useFrame((state, delta) => {
     const clampedDelta = Math.min(delta, DELTA_CLAMP);
-    
-    // Check for hatching on every frame (but only process once per pet)
     checkForHatching();
-    
-    // Handle degradation logic
     handleDegradation();
-    
-    // Skip movement for eggs
     if (petInfo.evolution_id[0] === 0) return;
-    
-    // Handle pet movement
     handleMovement(clampedDelta);
   });
   

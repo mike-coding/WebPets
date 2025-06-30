@@ -4,6 +4,7 @@ import MainMenu from './MainMenu';
 import TutorialUI from './TutorialUI';
 import HomeUI from './HomeUI';
 import PetSummary from './PetSummary';
+import PartyView from './PartyView';
 import InventoryUI from './InventoryUI';
 
 function UIOverlay() {
@@ -24,7 +25,7 @@ function UIOverlay() {
         <HomeUI/>
       ) : navigation.activePage === "petSummary" ? (
         <>
-          <PetSummary/>
+          {navigation.activePetId ? <PetSummary/> : <PartyView/>}
           <HomeUI/>
         </>
       ) : navigation.activePage === "inventory" ? (
