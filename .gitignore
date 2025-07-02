@@ -1,5 +1,9 @@
 backEnd/server/instance/*.db
 
+# Python cache files
+__pycache__/
+
+
 # Logs
 virtual-varmints/logs
 virtual-varmints/*.log
