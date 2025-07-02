@@ -5,13 +5,21 @@ This is intended to be a continuation of bitbeast arena, reimagined as a MOBILE 
 We're very much in the early stages here still, but I'm stoked about the accessibility of web dev.
 
 ## Targets before v0.0.3
-* [ ] Egg hatching & animation
+* [x] Egg hatching & animation
 * [ ] Bug Fixes
     * [x] Name update bug
     * [ ] Element size responsiveness on various devices
 * [x] Happiness, hunger degradation
 * [ ] Feeding
 * [ ] Pet metabolism (pooping!!!)
+* [ ] Pet health / illness
+* [ ] Items, inventory
+    * [ ] shop
+    * [ ] item definitions
+* [ ] minigames
+* [ ] sprite revisions
+* [ ] Summary page battle tab
+
 
 ## Dev Log-ish
 <img src = "screenshots/v0.0.2_menu.png">

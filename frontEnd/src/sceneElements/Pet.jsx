@@ -3,6 +3,8 @@ import { useFrame } from "@react-three/fiber";
 import { Billboard } from "@react-three/drei";
 import * as THREE from "three";
 import SpriteAnimator from "./SpriteAnimator.jsx";
+import EggHatchAnimation from "./EggHatchAnimation.jsx";
+import Poop from "./Poop.jsx";
 import { useNavigationContext, useUserDataContext } from "../hooks/AppContext";
 
 export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
@@ -11,7 +13,7 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
   const { updatePetData } = useUserDataContext();
   const fixedZ = 0.2;
   const speed = 0.8;
-  const egg_incubation_minutes = 0.3;
+  const egg_incubation_minutes = 0.1;
   
   // Constants
   const DELTA_CLAMP = 0.1;
@@ -39,6 +41,16 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
   // Track if we've already checked for hatching to avoid repeated checks
   const hasCheckedHatching = useRef(false);
   
+  // Hatch animation state
+  const [isHatching, setIsHatching] = useState(false);
+  const [hatchAnimationProgress, setHatchAnimationProgress] = useState(0);
+  const HATCH_ANIMATION_DURATION = 500; // 2 seconds for hatch animation
+  
+  // Poop dropping state
+  const [poops, setPoops] = useState([]);
+  const lastPoopTime = useRef(Date.now());
+  const POOP_INTERVAL = 10000; // 10 seconds in milliseconds
+  
   // Track last degradation time for real-time updates
   const lastDegradationTime = useRef(null);
   const handleClick = (event) => {
@@ -58,6 +70,10 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
     const incubation_ms = egg_incubation_minutes * MS_PER_MINUTE;
     
     if (ageMs > incubation_ms) {
+      // Start hatch animation
+      setIsHatching(true);
+      setHatchAnimationProgress(0);
+      
       // Hatch the egg by changing evolution_id[0] from 0 to 1
       const newEvolutionId = [1, petInfo.evolution_id[1]];
       updatePetData(petInfo.id, { evolution_id: newEvolutionId });
@@ -102,6 +118,28 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
       // Initialize lastUpdate if not set
       updatePetData(petInfo.id, { lastUpdate: currentTime });
       lastDegradationTime.current = currentTime;
+    }
+  };
+
+  // Handle poop dropping logic
+  const handlePoopDropping = () => {
+    const currentTime = Date.now();
+    const timeSinceLastPoop = currentTime - lastPoopTime.current;
+    
+    if (timeSinceLastPoop > POOP_INTERVAL) {
+      // Drop a poop at current position
+      const currentPos = groupRef.current ? groupRef.current.position : { x: 0, y: 0 };
+      const newPoop = {
+        id: Date.now(), // Simple ID for now
+        position: [currentPos.x, currentPos.y, 0.1], // Slightly above ground
+        size: 's',
+        createdAt: currentTime
+      };
+      
+      setPoops(prevPoops => [...prevPoops, newPoop]);
+      lastPoopTime.current = currentTime;
+      
+      console.log(`💩 Pet ${petInfo.id} dropped a poop at position [${currentPos.x.toFixed(2)}, ${currentPos.y.toFixed(2)}]`);
     }
   };
 
@@ -186,20 +224,62 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
     const clampedDelta = Math.min(delta, DELTA_CLAMP);
     checkForHatching();
     handleDegradation();
-    if (petInfo.evolution_id[0] === 0) return;
+    
+    // Handle hatch animation
+    if (isHatching) {
+      const newProgress = hatchAnimationProgress + (delta * 1000); // Convert delta to ms
+      setHatchAnimationProgress(newProgress);
+      
+      if (newProgress >= HATCH_ANIMATION_DURATION) {
+        setIsHatching(false);
+        setHatchAnimationProgress(0);
+      }
+    }
+    
+    if (petInfo.evolution_id[0] === 0) return; // Eggs don't move or poop
+    
     handleMovement(clampedDelta);
+    handlePoopDropping();
   });
   
   return (
-    <group ref={groupRef} onClick={handleClick}>
-      <Billboard follow={true}>
-        <SpriteAnimator
-          evolution_id={petInfo.evolution_id}
-          direction={direction}
-          flipInterval={0.5}
+    <>
+      {/* Pet group that moves around */}
+      <group ref={groupRef} onClick={handleClick}>
+        <Billboard follow={true}>
+          {/* Show hatch animation if hatching */}
+          {isHatching ? (
+            <EggHatchAnimation
+              petInfo={petInfo}
+              direction={direction}
+              hatchAnimationProgress={hatchAnimationProgress}
+              HATCH_ANIMATION_DURATION={HATCH_ANIMATION_DURATION}
+            />
+          ) : (
+            /* Normal sprite display */
+            <SpriteAnimator
+              evolution_id={petInfo.evolution_id}
+              direction={direction}
+              flipInterval={0.5}
+            />
+          )}
+        </Billboard>
+      </group>
+      
+      {/* Render all poops - OUTSIDE the pet group so they stay put */}
+      {poops.map((poop) => (
+        <Poop
+          key={poop.id}
+          size={poop.size}
+          position={poop.position}
+          onClick={(e) => {
+            e.stopPropagation();
+            console.log(`Clicked poop ${poop.id}`);
+            // TODO: Add poop cleanup logic
+          }}
         />
-      </Billboard>
-    </group>
+      ))}
+    </>
   );
 }
 

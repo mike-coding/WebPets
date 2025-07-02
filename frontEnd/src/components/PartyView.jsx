@@ -93,7 +93,7 @@ function PartyView() {
                             {calculateAge(pet.createdAt)}
                           </div>
                           <div>
-                            #{pet.evolution_id[1]}-{pet.evolution_id[0]}
+                            #{pet.evolution_id[0]}-{pet.evolution_id[1]}
                           </div>
                         </div>
                       </div>
