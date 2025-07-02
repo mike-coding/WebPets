@@ -10,7 +10,7 @@ import { useNavigationContext, useUserDataContext } from "../hooks/AppContext";
 export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
   const groupRef = useRef();
   const { navigateTo } = useNavigationContext();
-  const { updatePetData } = useUserDataContext();
+  const { userData, updateUserData } = useUserDataContext();
   const fixedZ = 0.2;
   const speed = 0.8;
   const egg_incubation_minutes = 0.1;
@@ -53,6 +53,16 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
   
   // Track last degradation time for real-time updates
   const lastDegradationTime = useRef(null);
+  
+  // Helper function to update pet data using the new updateUserData pattern
+  const updatePet = (petId, changes) => {
+    if (!userData) return;
+    const updatedPets = userData.pets.map(pet => 
+      pet.id === petId ? { ...pet, ...changes } : pet
+    );
+    updateUserData({ pets: updatedPets });
+  };
+  
   const handleClick = (event) => {
     event.stopPropagation();
     navigateTo("petSummary", null, petInfo.id);
@@ -76,7 +86,7 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
       
       // Hatch the egg by changing evolution_id[0] from 0 to 1
       const newEvolutionId = [1, petInfo.evolution_id[1]];
-      updatePetData(petInfo.id, { evolution_id: newEvolutionId });
+      updatePet(petInfo.id, { evolution_id: newEvolutionId });
       
       hasCheckedHatching.current = true; // Mark as checked
     }
@@ -106,7 +116,7 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
         
         console.log(`Pet ${petInfo.id}: Degradation update - ${hoursElapsed.toFixed(3)} hours elapsed - Hunger: ${petInfo.hunger.toFixed(3)} -> ${newHunger.toFixed(3)}, Happiness: ${petInfo.happiness.toFixed(3)} -> ${newHappiness.toFixed(3)}`);
         
-        updatePetData(petInfo.id, {
+        updatePet(petInfo.id, {
           hunger: newHunger,
           happiness: newHappiness,
           lastUpdate: currentTime
@@ -116,7 +126,7 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
       }
     } else {
       // Initialize lastUpdate if not set
-      updatePetData(petInfo.id, { lastUpdate: currentTime });
+      updatePet(petInfo.id, { lastUpdate: currentTime });
       lastDegradationTime.current = currentTime;
     }
   };

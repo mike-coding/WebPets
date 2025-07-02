@@ -23,7 +23,7 @@ const calculateAge = (createdAt) => {
 
 function PetSummary() {
   const { navigation, navigateTo } = useNavigationContext();
-  const { userData, updatePetData } = useUserDataContext();
+  const { userData, updateUserData } = useUserDataContext();
   
   // Get the current pet data from the main pets array using the ID
   const pet = userData?.pets.find(p => p.id === navigation.activePetId);
@@ -46,7 +46,10 @@ function PetSummary() {
 
   const handleNameBlur = () => {
     if (pet && pet.id !== undefined && petName !== pet.name) {
-      updatePetData(pet.id, { name: petName });
+      const updatedPets = userData.pets.map(p => 
+        p.id === pet.id ? { ...p, name: petName } : p
+      );
+      updateUserData({ pets: updatedPets });
     }
   };
 

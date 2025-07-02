@@ -36,7 +36,6 @@ interface AppState {
   navigateTo: (page: TopLevelPage, subPage?: ValidSubPage | null, activePetId?: number | null) => void;
   setUserData: (userData: UserData | null) => void;
   updateUserData: (changes: Partial<UserData>) => void;
-  updatePetData: (petId: number, changes: Partial<Pet>) => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -91,34 +90,6 @@ export const useAppStore = create<AppState>((set, get) => ({
         console.error("Error updating userData:", err);
         // Optionally revert the optimistic update here.
       });
-  },  
-  updatePetData: (petId, changes) => {
-    const { userData } = get();
-    if (!userData) return;
-    
-    const updatedPets = userData.pets.map(pet => 
-      pet.id === petId ? { ...pet, ...changes } : pet
-    );
-    
-    const updatedUserData = { ...userData, pets: updatedPets };
-    // Optimistic update
-    set({ userData: updatedUserData });
-
-    // Use the current host's IP address but change port to 5000
-    const currentHost = window.location.hostname;
-    const apiUrl = `http://${currentHost}:5000/userdata/${userData.id}`;
-
-    fetch(apiUrl, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updatedUserData),
-    })
-      .then((res) => res.json())
-      .then((serverData) => set({ userData: serverData }))
-      .catch((err) => {
-        console.error("Error updating pet data:", err);
-        // Optionally revert the optimistic update here.
-      });
   },
 }));
 
@@ -134,9 +105,8 @@ export const useUserDataContext = () => {
   const userData = typedUseAppStore((state) => state.userData, shallow);
   const setUserData = typedUseAppStore((state) => state.setUserData, shallow);
   const updateUserData = typedUseAppStore((state) => state.updateUserData, shallow);
-  const updatePetData = typedUseAppStore((state) => state.updatePetData, shallow);
   return React.useMemo(
-    () => ({ userData, setUserData, updateUserData, updatePetData }),
-    [userData, setUserData, updateUserData, updatePetData]
+    () => ({ userData, setUserData, updateUserData }),
+    [userData, setUserData, updateUserData]
   );
 };
