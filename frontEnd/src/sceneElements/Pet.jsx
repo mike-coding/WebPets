@@ -4,7 +4,6 @@ import { Billboard } from "@react-three/drei";
 import * as THREE from "three";
 import SpriteAnimator from "./SpriteAnimator.jsx";
 import EggHatchAnimation from "./EggHatchAnimation.jsx";
-import Poop from "./Poop.jsx";
 import { useNavigationContext, useUserDataContext } from "../hooks/AppContext";
 
 export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
@@ -47,7 +46,6 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
   const HATCH_ANIMATION_DURATION = 500; // 2 seconds for hatch animation
   
   // Poop dropping state
-  const [poops, setPoops] = useState([]);
   const lastPoopTime = useRef(Date.now());
   const POOP_INTERVAL = 10000; // 10 seconds in milliseconds
   
@@ -137,16 +135,19 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
     const timeSinceLastPoop = currentTime - lastPoopTime.current;
     
     if (timeSinceLastPoop > POOP_INTERVAL) {
-      // Drop a poop at current position
+      // Drop a poop at current position by creating a HomeObject
       const currentPos = groupRef.current ? groupRef.current.position : { x: 0, y: 0 };
-      const newPoop = {
-        id: Date.now(), // Simple ID for now
-        position: [currentPos.x, currentPos.y, 0.1], // Slightly above ground
-        size: 's',
-        createdAt: currentTime
-      };
       
-      setPoops(prevPoops => [...prevPoops, newPoop]);
+      // Create new HomeObject for the poop
+      const newHomeObjects = [...(userData.home_objects || []), {
+        user_data_id: userData.id,
+        type: 'temporary',
+        object_id: 1, // poo_s according to the home_object.py map
+        x: currentPos.x,
+        y: currentPos.y
+      }];
+      
+      updateUserData({ home_objects: newHomeObjects });
       lastPoopTime.current = currentTime;
       
       console.log(`💩 Pet ${petInfo.id} dropped a poop at position [${currentPos.x.toFixed(2)}, ${currentPos.y.toFixed(2)}]`);
@@ -275,20 +276,6 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
           )}
         </Billboard>
       </group>
-      
-      {/* Render all poops - OUTSIDE the pet group so they stay put */}
-      {poops.map((poop) => (
-        <Poop
-          key={poop.id}
-          size={poop.size}
-          position={poop.position}
-          onClick={(e) => {
-            e.stopPropagation();
-            console.log(`Clicked poop ${poop.id}`);
-            // TODO: Add poop cleanup logic
-          }}
-        />
-      ))}
     </>
   );
 }

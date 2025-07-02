@@ -16,10 +16,26 @@ export interface Pet {
   lastUpdate: number; // timestamp in milliseconds for degradation tracking
 }
 
-interface Item {
+export interface HomeObject {
+  id: number;
+  user_data_id: number;
+  type: string; // Type of home object (e.g., 'decor', 'temporary', etc.)
+  object_id: number; // ID of the specific object in the catalog
+  x: number; // X position in the game world
+  y: number; // Y position in the game world
+}
+
+export interface Item {
   id: number;
   name: string;
   type: string; // string for now, anyway. Make this discrete later
+}
+
+export interface InventoryItem {
+  id: number;
+  user_data_id: number;
+  item_id: number;
+  quantity: number;
 }
 
 export interface UserData {
@@ -28,6 +44,8 @@ export interface UserData {
   completed_tutorial: boolean;
   money: number;
   pets: Pet[];
+  home_objects: HomeObject[];
+  inventory: InventoryItem[];
 }
 
 interface AppState {
