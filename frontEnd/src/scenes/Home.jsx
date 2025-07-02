@@ -25,8 +25,9 @@ export default function HomeEnvironment() {
       <PetSpawner/>
       
       {/* Render all poops from HomeObjects */}
-      {poops.map((poop, index) => (
+      {poops.map((poop) => (
         <Poop
+          key={poop.id}
           poopId={poop.id} // Pass the poop ID for cleanup
           size={'s'} // All poops are small for now (object_id 1 = poo_s)
           position={[poop.x, poop.y, 0.03]} // Use HomeObject x,y position

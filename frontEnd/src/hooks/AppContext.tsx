@@ -54,6 +54,7 @@ interface AppState {
   navigateTo: (page: TopLevelPage, subPage?: ValidSubPage | null, activePetId?: number | null) => void;
   setUserData: (userData: UserData | null) => void;
   updateUserData: (changes: Partial<UserData>) => void;
+  deleteHomeObject: (homeObjectId: number) => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -109,6 +110,38 @@ export const useAppStore = create<AppState>((set, get) => ({
         // Optionally revert the optimistic update here.
       });
   },
+  deleteHomeObject: (homeObjectId) => {
+    const { userData } = get();
+    if (!userData) {
+      console.error("❌ deleteHomeObject called but userData is null!");
+      return;
+    }
+    
+    console.log(`🗑️ Deleting home object ${homeObjectId}`);
+    
+    // Optimistic update: remove from local state immediately
+    const updatedHomeObjects = userData.home_objects.filter(obj => obj.id !== homeObjectId);
+    const updatedUserData = { ...userData, home_objects: updatedHomeObjects };
+    set({ userData: updatedUserData });
+    
+    // Send DELETE request to backend
+    const currentHost = window.location.hostname;
+    const apiUrl = `http://${currentHost}:5000/homeobject/${homeObjectId}`;
+    
+    fetch(apiUrl, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+    })
+      .then((res) => res.json())
+      .then((result) => {
+        console.log("✅ Home object deleted successfully:", result);
+      })
+      .catch((err) => {
+        console.error("❌ Error deleting home object:", err);
+        // Revert optimistic update on error
+        set({ userData });
+      });
+  },
 }));
 
 const typedUseAppStore = useAppStore as <T>(selector: (state: AppState) => T, equalityFn?: (a: T, b: T) => boolean) => T;
@@ -123,8 +156,9 @@ export const useUserDataContext = () => {
   const userData = typedUseAppStore((state) => state.userData, shallow);
   const setUserData = typedUseAppStore((state) => state.setUserData, shallow);
   const updateUserData = typedUseAppStore((state) => state.updateUserData, shallow);
+  const deleteHomeObject = typedUseAppStore((state) => state.deleteHomeObject, shallow);
   return React.useMemo(
-    () => ({ userData, setUserData, updateUserData }),
-    [userData, setUserData, updateUserData]
+    () => ({ userData, setUserData, updateUserData, deleteHomeObject }),
+    [userData, setUserData, updateUserData, deleteHomeObject]
   );
 };

@@ -34,7 +34,10 @@ export function useSubmitAuth() {
               id: data.id,
               username: data.username,
               completed_tutorial: data.data.completed_tutorial,
-              pets: data.data.pets,
+              money: data.data.money || 0,
+              pets: data.data.pets || [],
+              home_objects: data.data.home_objects || [],
+              inventory: data.data.inventory || [],
             };
 
             setUserData(transformedData);

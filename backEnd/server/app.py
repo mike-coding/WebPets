@@ -139,5 +139,28 @@ def update_userdata(user_id):
     
     return jsonify(response_data), 200
 
+# Delete a specific home object
+@app.route('/homeobject/<int:home_object_id>', methods=['DELETE'])
+def delete_home_object(home_object_id):
+    """Delete a specific home object by ID."""
+    home_obj = db.session.get(HomeObject, home_object_id)
+    if not home_obj:
+        return jsonify(error="Home object not found"), 404
+    
+    print(f"🗑️ Deleting home object {home_object_id} (type: {home_obj.type}, object_id: {home_obj.object_id})")
+    
+    # Store user_data_id before deletion for response
+    user_data_id = home_obj.user_data_id
+    
+    # Delete the object
+    db.session.delete(home_obj)
+    db.session.commit()
+    
+    return jsonify({
+        "message": "Home object deleted successfully",
+        "deleted_id": home_object_id,
+        "user_data_id": user_data_id
+    }), 200
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
