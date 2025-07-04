@@ -146,6 +146,23 @@ function PetSummary() {
             </div>
           </div>
 
+          <div className="Spacer h-1.5"/>
+
+          {/* Play Button */}
+          <div className="w-full flex flex-row items-center justify-around">
+            <div onClick={() => navigateTo("minigames", "endless_runner", pet.id)}>
+              <IconButton
+                iconName="playIcon"
+                withEffects={false}>Play</IconButton>
+            </div>
+            <IconButton
+              iconName="feed"
+              withEffects={false}>Feed</IconButton>
+            <IconButton
+              iconName="consumableItem"
+              withEffects={false}>Medicine</IconButton>
+          </div>
+
           {/* Abilities Row */}
           {pet.abilities && pet.abilities.length > 0 && (
             <div className="w-full flex flex-col items-start px-4 py-3 bg-gray-900/30 rounded-sm shadow-md">

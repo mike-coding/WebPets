@@ -41,6 +41,17 @@ export interface InventoryItem {
   quantity: number;
 }
 
+export interface MinigameState {
+  endlessRunner: {
+    isGameStarted: boolean;
+    isGameOver: boolean;
+    isPaused: boolean;
+    currentLane: number;
+    score: number;
+    coinsCollected: number;
+  };
+}
+
 export interface UserData {
   id: number;
   username: string;
@@ -54,15 +65,28 @@ export interface UserData {
 interface AppState {
   navigation: NavigationState;
   userData: UserData | null;
+  minigames: MinigameState;
   navigateTo: (page: TopLevelPage, subPage?: ValidSubPage | null, activePetId?: number | null) => void;
   setUserData: (userData: UserData | null) => void;
   updateUserData: (changes: Partial<UserData>) => void;
   deleteHomeObject: (homeObjectId: number) => void;
+  updateEndlessRunnerState: (changes: Partial<MinigameState['endlessRunner']>) => void;
+  resetEndlessRunner: () => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
   navigation: { activePage: "mainMenu", activeSubPage: "loginRegister", activePetId: null },
   userData: null,
+  minigames: {
+    endlessRunner: {
+      isGameStarted: false,
+      isGameOver: false,
+      isPaused: false,
+      currentLane: 1,
+      score: 0,
+      coinsCollected: 0,
+    },
+  },
   navigateTo: (page, subPage = null, activePetId = null) =>
     set({ navigation: { activePage: page, activeSubPage: subPage, activePetId: activePetId } }),
   setUserData: (userData) => {
@@ -150,6 +174,25 @@ export const useAppStore = create<AppState>((set, get) => ({
         // Revert optimistic update on error
         set({ userData });
       });
+  },
+  updateEndlessRunnerState: (changes) => {
+    const { minigames } = get();
+    const updatedEndlessRunner = { ...minigames.endlessRunner, ...changes };
+    const updatedMinigames = { ...minigames, endlessRunner: updatedEndlessRunner };
+    set({ minigames: updatedMinigames });
+  },
+  resetEndlessRunner: () => {
+    const { minigames } = get();
+    const resetEndlessRunner = {
+      isGameStarted: false,
+      isGameOver: false,
+      isPaused: false,
+      currentLane: 1,
+      score: 0,
+      coinsCollected: 0,
+    };
+    const updatedMinigames = { ...minigames, endlessRunner: resetEndlessRunner };
+    set({ minigames: updatedMinigames });
   },
 }));
 
