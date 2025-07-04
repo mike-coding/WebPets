@@ -15,6 +15,9 @@ function getSpriteUrl(e0, e1, dir, frame) {
   return `/src/sprites/pets/${e0}/${e1}/${dir}_${frame}.png`;
 }
 
+// Verbose flag for debug logging
+const VERBOSE_DEBUG = false;
+
 export default function SpriteAnimator({ evolution_id, direction, flipInterval = 0.5, onClick }) {
   const isEgg = evolution_id[0] === 0;
   // For eggs, always use "F"
@@ -40,14 +43,16 @@ export default function SpriteAnimator({ evolution_id, direction, flipInterval =
   const actualUrl_L_0 = spriteUrlMap[url_L_0];
   const actualUrl_L_1 = spriteUrlMap[url_L_1];
 
-  console.log("🎨 SpriteAnimator DEBUG:");
-  console.log("  evolution_id:", evolution_id, "isEgg:", isEgg, "actualDirection:", actualDirection);
-  console.log("  Generated URLs:");
-  console.log("    F_0:", url_F_0, "exists:", !!actualUrl_F_0);
-  console.log("    F_1:", url_F_1, "exists:", !!actualUrl_F_1);
-  console.log("  Actual URLs:");
-  console.log("    F_0:", actualUrl_F_0);
-  console.log("    F_1:", actualUrl_F_1);
+  if (VERBOSE_DEBUG) {
+    console.log("🎨 SpriteAnimator DEBUG:");
+    console.log("  evolution_id:", evolution_id, "isEgg:", isEgg, "actualDirection:", actualDirection);
+    console.log("  Generated URLs:");
+    console.log("    F_0:", url_F_0, "exists:", !!actualUrl_F_0);
+    console.log("    F_1:", url_F_1, "exists:", !!actualUrl_F_1);
+    console.log("  Actual URLs:");
+    console.log("    F_0:", actualUrl_F_0);
+    console.log("    F_1:", actualUrl_F_1);
+  }
 
   // Always load F textures (required for all pets)
   const textures_F = useTexture([actualUrl_F_0, actualUrl_F_1]);

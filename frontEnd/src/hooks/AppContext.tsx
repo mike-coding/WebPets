@@ -3,6 +3,9 @@ import { shallow } from 'zustand/shallow';
 import { TopLevelPage, ValidSubPage, NavigationState } from '../utils/NavigationTypes';
 import React from 'react';
 
+// Verbose flag for debug logging
+const VERBOSE_DEBUG = false;
+
 export interface Pet {
   id: number;
   evolution_id: [number, number]; // [evolution_stage, evolution_line]
@@ -63,7 +66,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   navigateTo: (page, subPage = null, activePetId = null) =>
     set({ navigation: { activePage: page, activeSubPage: subPage, activePetId: activePetId } }),
   setUserData: (userData) => {
-    console.log("setUserData in Zustand", performance.now());
+    if (VERBOSE_DEBUG) console.log("setUserData in Zustand", performance.now());
     set({ userData });
   },  
   updateUserData: (changes) => {
@@ -80,10 +83,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     
     const updatedUserData = { ...userData, ...changes };
     
-    console.log("🔄 OPTIMISTIC UPDATE - Before:", userData);
-    console.log("🔄 OPTIMISTIC UPDATE - Changes:", changes);
-    console.log("🔄 OPTIMISTIC UPDATE - After:", updatedUserData);
-    console.log("🔄 USER ID FOR REQUEST:", userData.id);
+    if (VERBOSE_DEBUG) {
+      console.log("🔄 OPTIMISTIC UPDATE - Before:", userData);
+      console.log("🔄 OPTIMISTIC UPDATE - Changes:", changes);
+      console.log("🔄 OPTIMISTIC UPDATE - After:", updatedUserData);
+      console.log("🔄 USER ID FOR REQUEST:", userData.id);
+    }
     
     // Optionally perform an optimistic update:
     set({ userData: updatedUserData });
@@ -92,7 +97,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     const currentHost = window.location.hostname;
     const apiUrl = `http://${currentHost}:5000/userdata/${userData.id}`;
 
-    console.log("📤 SENDING TO SERVER:", JSON.stringify(updatedUserData, null, 2));
+    if (VERBOSE_DEBUG) {
+      console.log("📤 SENDING TO SERVER:", JSON.stringify(updatedUserData, null, 2));
+    }
 
     fetch(apiUrl, {
       method: "PUT",
@@ -101,9 +108,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     })
       .then((res) => res.json())
       .then((serverData) => {
-        console.log("📥 SERVER RESPONSE:", serverData);
+        if (VERBOSE_DEBUG) {
+          console.log("📥 SERVER RESPONSE:", serverData);
+        }
         set({ userData: serverData });
-        console.log("✅ STATE UPDATED WITH SERVER DATA");
+        if (VERBOSE_DEBUG) console.log("✅ STATE UPDATED WITH SERVER DATA");
       })
       .catch((err) => {
         console.error("Error updating userData:", err);
@@ -117,7 +126,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       return;
     }
     
-    console.log(`🗑️ Deleting home object ${homeObjectId}`);
+    if (VERBOSE_DEBUG) console.log(`🗑️ Deleting home object ${homeObjectId}`);
     
     // Optimistic update: remove from local state immediately
     const updatedHomeObjects = userData.home_objects.filter(obj => obj.id !== homeObjectId);
@@ -134,7 +143,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     })
       .then((res) => res.json())
       .then((result) => {
-        console.log("✅ Home object deleted successfully:", result);
+        if (VERBOSE_DEBUG) console.log("✅ Home object deleted successfully:", result);
       })
       .catch((err) => {
         console.error("❌ Error deleting home object:", err);

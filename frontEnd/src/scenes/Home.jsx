@@ -3,36 +3,26 @@ import TiledGround from "../sceneElements/TiledGround";
 import Tree from "../models/tree";
 import PetSpawner from "../sceneElements/PetSpawner";
 import InstancedTrees from "../sceneElements/InstancedHomeTrees";
-import Poop from "../sceneElements/Poop";
+import PoopSpawner from "../sceneElements/PoopSpawner";
 import { useUserDataContext } from "../hooks/AppContext";
 
 export default function HomeEnvironment() {
   const { userData } = useUserDataContext();
   
-  // Get all temporary home objects (poops)
-  const poops = useMemo(() => {
-    if (!userData?.home_objects) return [];
-    const filteredPoops = userData.home_objects.filter(obj => 
-      obj.type === 'temporary' && obj.object_id === 1 // poo_s
-    );
-    return filteredPoops;
-  }, [userData?.home_objects]);
+  // Define explicit world bounds
+  const WORLD_BOUNDS = {
+    width: 25,
+    height: 20,
+    clearingWidth: 3,
+    clearingHeight: 7
+  };
 
   return (
     <>
-      <TiledGround patternWidth={25} patternHeight={20} />
-      <InstancedTrees clearingWidth={3} clearingHeight={7}/>
-      <PetSpawner/>
-      
-      {/* Render all poops from HomeObjects */}
-      {poops.map((poop) => (
-        <Poop
-          key={poop.id}
-          poopId={poop.id} // Pass the poop ID for cleanup
-          size={'s'} // All poops are small for now (object_id 1 = poo_s)
-          position={[poop.x, poop.y, 0.03]} // Use HomeObject x,y position
-        />
-      ))}
+      <TiledGround patternWidth={WORLD_BOUNDS.width} patternHeight={WORLD_BOUNDS.height} />
+      <InstancedTrees clearingWidth={WORLD_BOUNDS.clearingWidth} clearingHeight={WORLD_BOUNDS.clearingHeight}/>
+      <PoopSpawner />
+      <PetSpawner bounds={WORLD_BOUNDS} />
     </>
   );
 }
