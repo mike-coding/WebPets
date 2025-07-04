@@ -47,7 +47,7 @@ export default function Pet({ petInfo, bounds = { x: [-8, 8], y: [-6, 6] } }) {
   
   // Poop dropping state
   const lastPoopTime = useRef(Date.now());
-  const POOP_INTERVAL = 10000; // 10 seconds in milliseconds
+  const POOP_INTERVAL = MS_PER_MINUTE * 3; // 10 seconds in milliseconds
   
   // Track last degradation time for real-time updates
   const lastDegradationTime = useRef(null);

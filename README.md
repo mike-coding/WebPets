@@ -4,7 +4,7 @@ This is intended to be a continuation of bitbeast arena, reimagined as a MOBILE 
 
 We're very much in the early stages here still, but I'm stoked about the accessibility of web dev.
 
-## Targets before v0.0.3
+## Targets
 * [x] Egg hatching & animation
 * [ ] Bug Fixes
     * [x] Name update bug
@@ -12,12 +12,22 @@ We're very much in the early stages here still, but I'm stoked about the accessi
 * [x] Happiness, hunger degradation
 * [ ] Feeding
 * [ ] Pet metabolism (pooping!!!)
+    * [x] Simple pooping
+    * [x] Persistent poops
+    * [ ] Poops tied to hunger bar
+    * [ ] Populate poops that would have been made since last login
+    * [ ] Lots of poops start to degrade happiness faster (or can cause illness?)
+    * [ ] Variable metabolism by life stage
+* [ ] Away time simulations 
+    * [ ] e.g. if a lot of poops while gone, also simulate odds of pet sickness, or happiness decrease more quickly
 * [ ] Pet health / illness
 * [ ] Items, inventory
     * [ ] shop
     * [ ] item definitions
 * [ ] minigames
 * [ ] sprite revisions
+    * [x] 1-1
+    * [ ] 1-2
 * [ ] Summary page battle tab
 
 
