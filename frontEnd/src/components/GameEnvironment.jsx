@@ -4,10 +4,15 @@ import HomeEnvironment from "../scenes/Home";
 import { Preload } from "@react-three/drei";
 import React, { Suspense } from "react"
 import { useNavigationContext } from '../hooks/AppContext';
-import EndlessRunnerScene from '../scenes/EndlessRunnerScene';
+import EndlessRunner from './EndlessRunner_simple';
 
 export default function GameEnvironment() {
   const { navigation } = useNavigationContext();
+  
+  // If we're in a minigame, render the minigame instead of the Canvas
+  if (navigation.activePage === "minigames" && navigation.activeSubPage === "endless_runner") {
+    return <EndlessRunner />;
+  }
   
   return (
     <Canvas 
@@ -18,13 +23,7 @@ export default function GameEnvironment() {
       style={{ pointerEvents: 'auto' }}
     >
       <color attach="background" args={['#000000']} />  
-      
-      {navigation.activePage === "minigames" && navigation.activeSubPage === "endless_runner" ? (
-        <EndlessRunnerScene />
-      ) : (
-        <HomeEnvironment/>
-      )}
-      
+      <HomeEnvironment/>
       <ambientLight intensity={1.5} />
       <directionalLight intensity={2} position={[0, -10, 10]} castShadow/>
     </Canvas>

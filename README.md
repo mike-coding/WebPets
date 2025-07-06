@@ -4,7 +4,7 @@ This is intended to be a continuation of bitbeast arena, reimagined as a MOBILE 
 
 We're very much in the early stages here still, but I'm stoked about the accessibility of web dev.
 
-## Targets
+## TO-DO
 * [x] Egg hatching & animation
 * [ ] Bug Fixes
     * [x] Name update bug
@@ -29,6 +29,8 @@ We're very much in the early stages here still, but I'm stoked about the accessi
     * [x] 1-1
     * [ ] 1-2
 * [ ] Summary page battle tab
+* [ ] Do we really need to be tracking minigame state outside of the minigame itself
+    * [ ] My guess is no. Move this logic inside the game component
 
 
 ## Dev Log-ish

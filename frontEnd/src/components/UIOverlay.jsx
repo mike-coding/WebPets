@@ -6,7 +6,7 @@ import HomeUI from './HomeUI';
 import PetSummary from './PetSummary';
 import PartyView from './PartyView';
 import InventoryUI from './InventoryUI';
-import EndlessRunnerUI from './EndlessRunnerUI';
+import EndlessRunner from './EndlessRunner_simple';
 
 function UIOverlay() {
   const { navigation } = useNavigationContext();
@@ -35,7 +35,7 @@ function UIOverlay() {
           <HomeUI/>
         </>
       ) : navigation.activePage === "minigames" && navigation.activeSubPage === "endless_runner" ? (
-        <EndlessRunnerUI/>
+        null
       ) : (
         <div>{navigation.activePage} {navigation.activeSubPage}</div>
       )

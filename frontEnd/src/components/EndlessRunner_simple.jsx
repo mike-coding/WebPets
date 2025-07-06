@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useFrame } from '@react-three/fiber';
-import { Canvas } from '@react-three/fiber';
+import { useFrame, Canvas } from '@react-three/fiber';
 import { useNavigationContext, useUserDataContext } from '../hooks/AppContext';
 import SpriteAnimator from '../sceneElements/SpriteAnimator';
+import Tree from '../models/tree';
 import IconButton from './IconButton';
 
 // Game constants
@@ -13,7 +13,7 @@ const COIN_SPAWN_RATE = 0.02;
 const TREE_SPAWN_RATE = 0.015;
 
 // Game objects
-function Coin({ position, onCollect }) {
+function Coin({ position, onCollect, positionRef }) {
   const meshRef = useRef();
   
   useFrame((state, delta) => {
@@ -22,9 +22,15 @@ function Coin({ position, onCollect }) {
     // Move coin towards player
     meshRef.current.position.z += GAME_SPEED * delta;
     
+    // Update position ref for collision detection
+    if (positionRef && positionRef.current) {
+      positionRef.current.x = meshRef.current.position.x;
+      positionRef.current.z = meshRef.current.position.z;
+    }
+    
     // Check if coin is past player
     if (meshRef.current.position.z > 2) {
-      onCollect(null); // Remove without collecting
+      onCollect(); // Remove without collecting
     }
     
     // Simple rotation animation
@@ -39,7 +45,7 @@ function Coin({ position, onCollect }) {
   );
 }
 
-function Tree({ position, onCollision }) {
+function TreeObstacle({ position, onCollision, positionRef }) {
   const meshRef = useRef();
   
   useFrame((state, delta) => {
@@ -48,17 +54,22 @@ function Tree({ position, onCollision }) {
     // Move tree towards player
     meshRef.current.position.z += GAME_SPEED * delta;
     
+    // Update position ref for collision detection
+    if (positionRef && positionRef.current) {
+      positionRef.current.x = meshRef.current.position.x;
+      positionRef.current.z = meshRef.current.position.z;
+    }
+    
     // Check if tree is past player
     if (meshRef.current.position.z > 2) {
-      onCollision(null); // Remove without collision
+      onCollision(); // Remove without collision
     }
   });
   
   return (
-    <mesh ref={meshRef} position={position} scale={[0.5, 1, 0.5]}>
-      <cylinderGeometry args={[0.3, 0.5, 2, 8]} />
-      <meshBasicMaterial color="#8B4513" />
-    </mesh>
+    <group ref={meshRef} position={position}>
+      <Tree scale={[0.8, 0.8, 0.8]} />
+    </group>
   );
 }
 
@@ -80,13 +91,15 @@ function Player({ pet, lane, isGameOver }) {
   );
 }
 
-function GameScene({ pet, gameState, setGameState }) {
+function GameScene({ gameState, setGameState, pet }) {
   const [coins, setCoins] = useState([]);
   const [trees, setTrees] = useState([]);
   const spawnTimerRef = useRef(0);
+  const coinPositionRefs = useRef({});
+  const treePositionRefs = useRef({});
   
   useFrame((state, delta) => {
-    if (gameState.isGameOver || gameState.isPaused) return;
+    if (gameState.isGameOver || gameState.isPaused || !gameState.isGameStarted) return;
     
     spawnTimerRef.current += delta;
     
@@ -117,31 +130,41 @@ function GameScene({ pet, gameState, setGameState }) {
     
     // Check collisions
     const playerX = LANES[gameState.currentLane];
+    const playerZ = 0; // Player is at z=0
     
-    // Coin collection
+    // Coin collection - check against actual mesh positions
     coins.forEach(coin => {
-      const distance = Math.sqrt(
-        Math.pow(coin.position[0] - playerX, 2) + 
-        Math.pow(coin.position[2], 2)
-      );
-      if (distance < 0.8) {
-        setGameState(prev => ({
-          ...prev,
-          score: prev.score + 10,
-          coinsCollected: prev.coinsCollected + 1
-        }));
-        setCoins(prev => prev.filter(c => c.id !== coin.id));
+      const coinPos = coinPositionRefs.current[coin.id];
+      if (coinPos && typeof coinPos.x === 'number' && typeof coinPos.z === 'number') {
+        const distanceX = Math.abs(coinPos.x - playerX);
+        const distanceZ = Math.abs(coinPos.z - playerZ);
+        
+        // More lenient collision detection for coins
+        if (distanceX < 0.5 && distanceZ < 1.0) {
+          console.log('Coin collected!', coin.id); // Debug log
+          setGameState(prev => ({
+            ...prev,
+            score: prev.score + 10,
+            coinsCollected: prev.coinsCollected + 1
+          }));
+          setCoins(prev => prev.filter(c => c.id !== coin.id));
+          delete coinPositionRefs.current[coin.id]; // Clean up ref
+        }
       }
     });
     
-    // Tree collision
+    // Tree collision - check against actual mesh positions
     trees.forEach(tree => {
-      const distance = Math.sqrt(
-        Math.pow(tree.position[0] - playerX, 2) + 
-        Math.pow(tree.position[2], 2)
-      );
-      if (distance < 0.8) {
-        setGameState(prev => ({ ...prev, isGameOver: true }));
+      const treePos = treePositionRefs.current[tree.id];
+      if (treePos && typeof treePos.x === 'number' && typeof treePos.z === 'number') {
+        const distanceX = Math.abs(treePos.x - playerX);
+        const distanceZ = Math.abs(treePos.z - playerZ);
+        
+        // Stricter collision detection for trees
+        if (distanceX < 0.6 && distanceZ < 0.8) {
+          console.log('Tree collision!', tree.id); // Debug log
+          setGameState(prev => ({ ...prev, isGameOver: true }));
+        }
       }
     });
   });
@@ -177,22 +200,38 @@ function GameScene({ pet, gameState, setGameState }) {
       <Player pet={pet} lane={gameState.currentLane} isGameOver={gameState.isGameOver} />
       
       {/* Coins */}
-      {coins.map(coin => (
-        <Coin 
-          key={coin.id} 
-          position={coin.position} 
-          onCollect={() => handleCoinCollect(coin.id)} 
-        />
-      ))}
+      {coins.map(coin => {
+        // Create or get position ref for this coin
+        if (!coinPositionRefs.current[coin.id]) {
+          coinPositionRefs.current[coin.id] = { x: coin.position[0], z: coin.position[2] };
+        }
+        
+        return (
+          <Coin 
+            key={coin.id} 
+            position={coin.position} 
+            onCollect={() => handleCoinCollect(coin.id)}
+            positionRef={{ current: coinPositionRefs.current[coin.id] }}
+          />
+        );
+      })}
       
       {/* Trees */}
-      {trees.map(tree => (
-        <Tree 
-          key={tree.id} 
-          position={tree.position} 
-          onCollision={() => handleTreeCollision(tree.id)} 
-        />
-      ))}
+      {trees.map(tree => {
+        // Create or get position ref for this tree
+        if (!treePositionRefs.current[tree.id]) {
+          treePositionRefs.current[tree.id] = { x: tree.position[0], z: tree.position[2] };
+        }
+        
+        return (
+          <TreeObstacle 
+            key={tree.id} 
+            position={tree.position} 
+            onCollision={() => handleTreeCollision(tree.id)}
+            positionRef={{ current: treePositionRefs.current[tree.id] }}
+          />
+        );
+      })}
     </>
   );
 }
@@ -303,7 +342,7 @@ function EndlessRunner() {
         className="w-full h-full"
       >
         {gameState.isGameStarted && (
-          <GameScene pet={pet} gameState={gameState} setGameState={setGameState} />
+          <GameScene gameState={gameState} setGameState={setGameState} pet={pet} />
         )}
       </Canvas>
       
