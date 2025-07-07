@@ -1,5 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useFrame, Canvas } from '@react-three/fiber';
+import { useTexture } from '@react-three/drei';
 import { useNavigationContext, useUserDataContext } from '../hooks/AppContext';
 import SpriteAnimator from '../sceneElements/SpriteAnimator';
 import Tree from '../models/tree';
@@ -122,6 +123,99 @@ function TreeObstacle({ position, onCollision, positionRef, gameSpeed }) {
   );
 }
 
+function ScrollingGround({ gameSpeed }) {
+  const meshRef = useRef();
+  
+  // Import grass tile modules (same as TiledGround.jsx)
+  const tileModules = import.meta.glob('/src/sprites/tiles/grass/*.png', { eager: true });
+  const tileUrlMap = Object.fromEntries(
+    Object.entries(tileModules).map(([path, mod]) => {
+      const fileName = path.split('/').pop();
+      return [fileName, mod.default];
+    })
+  );
+  
+  // Same texture file names as TiledGround.jsx
+  const textureFileNames = [
+    "0.png","0.png","0.png","0.png","0.png","0.png","0.png","0.png","0.png","0.png","0.png",
+    "1.png","1.png","1.png","1.png","1.png","1.png","1.png","1.png","1.png","1.png",
+    "0.png","0.png","0.png","0.png","0.png","0.png","0.png","0.png","0.png","0.png",
+    "0.png","1.png","1.png","1.png","1.png","1.png","1.png","1.png","1.png","1.png",
+    "1.png","0.png","0.png","0.png","0.png","0.png","0.png","0.png","0.png","0.png",
+    "0.png","1.png","1.png","1.png","1.png","1.png","1.png","1.png","1.png","1.png",
+    "0.png","0.png","0.png","0.png","0.png","0.png","0.png","0.png","0.png","0.png",
+    "0.png","1.png","1.png","1.png","1.png","1.png","1.png","1.png","1.png","1.png",
+    "7.png","8.png","7.png","8.png","7.png","8.png","7.png","8.png","7.png","8.png",
+    "7.png","8.png","9.png","10.png","13.png","13.png","13.png","13.png","13.png","13.png",
+    "13.png","13.png","16.png","19.png","19.png","19.png","19.png","19.png","19.png","19.png",
+    "22.png","25.png","25.png","25.png","25.png","25.png","25.png","25.png","26.png","27.png","28.png"
+  ];
+  
+  const textureUrls = textureFileNames.map(name => tileUrlMap[name]);
+  const candidateTextures = useTexture(textureUrls);
+  
+  // Configure textures
+  candidateTextures.forEach(tex => {
+    tex.minFilter = THREE.NearestFilter;
+    tex.magFilter = THREE.NearestFilter;
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.needsUpdate = true;
+  });
+  
+  // Create scrolling atlas texture
+  const atlasTexture = useMemo(() => {
+    if (!candidateTextures || candidateTextures.length === 0) return null;
+    
+    const patternWidth = 10;
+    const patternHeight = 40;
+    const tileSize = 32;
+    
+    const canvas = document.createElement("canvas");
+    canvas.width = patternWidth * tileSize;
+    canvas.height = patternHeight * tileSize;
+    const ctx = canvas.getContext("2d");
+
+    // Create random atlas (same as TiledGround.jsx)
+    for (let y = 0; y < patternHeight; y++) {
+      for (let x = 0; x < patternWidth; x++) {
+        const posX = x * tileSize;
+        const posY = y * tileSize;
+        const idx = Math.floor(Math.random() * candidateTextures.length);
+        const img = candidateTextures[idx].image;
+        ctx.drawImage(img, posX, posY, tileSize, tileSize);
+      }
+    }
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.NearestFilter;
+    texture.magFilter = THREE.NearestFilter;
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.needsUpdate = true;
+    texture.repeat.set(1, 1);
+    return texture;
+  }, [candidateTextures]);
+  
+  useFrame((state, delta) => {
+    if (!meshRef.current || !atlasTexture) return;
+    
+    // Scroll the texture at the same rate as coins and trees
+    atlasTexture.offset.y += (gameSpeed * delta) * 0.025; // Match the speed of moving objects
+  });
+  
+  return (
+    <mesh ref={meshRef} position={[0, -0.5, -10]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+      <planeGeometry args={[10, 40]} />
+      <meshStandardMaterial 
+        map={atlasTexture}
+        color="#ffffff"
+        receiveShadow
+      />
+    </mesh>
+  );
+}
+
 function Player({ pet, lane, isGameOver, playerRef }) {
   const meshRef = useRef();
   const targetX = LANES[lane];
@@ -216,7 +310,7 @@ function GameScene({ gameState, setGameState, pet }) {
         const lane = Math.floor(Math.random() * 3);
         const newTree = {
           id: Date.now() + Math.random() + 1000,
-          position: [LANES[lane], 0, -20] // Back to Y=0, the Tree component handles its own positioning
+          position: [LANES[lane], -0.5, -20] // Position trees on the ground surface
         };
         setTrees(prev => [...prev, newTree]);
       }
@@ -296,10 +390,10 @@ function GameScene({ gameState, setGameState, pet }) {
   
   return (
     <>
-      <ambientLight intensity={0.6} />
+      <ambientLight intensity={1.5} />
       <directionalLight 
-        position={[10, 10, 5]} 
-        intensity={1.0}
+        position={[5, 10, 10]} 
+        intensity={2}
         castShadow
         shadow-mapSize-width={1024}
         shadow-mapSize-height={1024}
@@ -310,11 +404,8 @@ function GameScene({ gameState, setGameState, pet }) {
         shadow-camera-bottom={-10}
       />
       
-      {/* Ground plane */}
-      <mesh position={[0, -0.5, -10]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[10, 40]} />
-        <meshStandardMaterial color="#90EE90" />
-      </mesh>
+      {/* Scrolling ground with grass tiles */}
+      <ScrollingGround gameSpeed={currentGameSpeed} />
       
       {/* Lane markers */}
       {LANES.map((laneX, index) => (
