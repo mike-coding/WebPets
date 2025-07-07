@@ -10,21 +10,23 @@ import * as THREE from 'three';
 // Game constants
 const LANE_WIDTH = 1.2;
 const LANES = [-LANE_WIDTH, 0, LANE_WIDTH]; // Left, center, right lanes
-const BASE_GAME_SPEED = 5;
-const SPEED_INCREMENT = 0.05; // Speed increase per coin collected
+const BASE_GAME_SPEED = 4;
+const SPEED_INCREMENT = 0.0275; // Speed increase per coin collected
 const COIN_SPAWN_RATE = 0.025;
-const LARGE_COIN_SPAWN_RATE = 0.006;
-const TREE_SPAWN_RATE = 0.015;
+const LARGE_COIN_SPAWN_RATE = 0.003;
+const TREE_SPAWN_RATE = 0.03;
 
 // Game objects
-function Coin({ position, onCollect, positionRef, gameSpeed }) {
+function Coin({ position, onCollect, positionRef, gameSpeed, gameState }) {
   const meshRef = useRef();
   
   useFrame((state, delta) => {
     if (!meshRef.current) return;
     
-    // Move coin towards player using dynamic speed
-    meshRef.current.position.z += gameSpeed * delta;
+    // Move coin towards player using dynamic speed (stop if game is over or paused)
+    if (!gameState.isGameOver && !gameState.isPaused) {
+      meshRef.current.position.z += gameSpeed * delta;
+    }
     
     // Update position ref for collision detection
     if (positionRef && positionRef.current) {
@@ -37,8 +39,10 @@ function Coin({ position, onCollect, positionRef, gameSpeed }) {
       onCollect(); // Remove without collecting
     }
     
-    // Simple rotation animation - rotate around Z axis since coin is now flat
-    meshRef.current.rotation.z += delta * 3;
+    // Simple rotation animation - rotate around Z axis since coin is now flat (stop if game is over or paused)
+    if (!gameState.isGameOver && !gameState.isPaused) {
+      meshRef.current.rotation.z += delta * 3;
+    }
   });
   
   return (
@@ -56,14 +60,16 @@ function Coin({ position, onCollect, positionRef, gameSpeed }) {
   );
 }
 
-function LargeCoin({ position, onCollect, positionRef, gameSpeed }) {
+function LargeCoin({ position, onCollect, positionRef, gameSpeed, gameState }) {
   const meshRef = useRef();
   
   useFrame((state, delta) => {
     if (!meshRef.current) return;
     
-    // Move coin towards player using dynamic speed
-    meshRef.current.position.z += gameSpeed * delta;
+    // Move coin towards player using dynamic speed (stop if game is over or paused)
+    if (!gameState.isGameOver && !gameState.isPaused) {
+      meshRef.current.position.z += gameSpeed * delta;
+    }
     
     // Update position ref for collision detection
     if (positionRef && positionRef.current) {
@@ -76,8 +82,10 @@ function LargeCoin({ position, onCollect, positionRef, gameSpeed }) {
       onCollect(); // Remove without collecting
     }
     
-    // Faster rotation animation for visual distinction
-    meshRef.current.rotation.z += delta * 5;
+    // Faster rotation animation for visual distinction (stop if game is over or paused)
+    if (!gameState.isGameOver && !gameState.isPaused) {
+      meshRef.current.rotation.z += delta * 5;
+    }
   });
   
   return (
@@ -95,14 +103,16 @@ function LargeCoin({ position, onCollect, positionRef, gameSpeed }) {
   );
 }
 
-function TreeObstacle({ position, onCollision, positionRef, gameSpeed }) {
+function TreeObstacle({ position, onCollision, positionRef, gameSpeed, gameState }) {
   const meshRef = useRef();
   
   useFrame((state, delta) => {
     if (!meshRef.current) return;
     
-    // Move tree towards player using dynamic speed
-    meshRef.current.position.z += gameSpeed * delta;
+    // Move tree towards player using dynamic speed (stop if game is over or paused)
+    if (!gameState.isGameOver && !gameState.isPaused) {
+      meshRef.current.position.z += gameSpeed * delta;
+    }
     
     // Update position ref for collision detection
     if (positionRef && positionRef.current) {
@@ -123,7 +133,7 @@ function TreeObstacle({ position, onCollision, positionRef, gameSpeed }) {
   );
 }
 
-function ScrollingGround({ gameSpeed }) {
+function ScrollingGround({ gameSpeed, gameState }) {
   const meshRef = useRef();
   
   // Import grass tile modules (same as TiledGround.jsx)
@@ -200,15 +210,17 @@ function ScrollingGround({ gameSpeed }) {
   useFrame((state, delta) => {
     if (!meshRef.current || !atlasTexture) return;
     
-    // Scroll the texture at the same rate as coins and trees
-    atlasTexture.offset.y += (gameSpeed * delta) * 0.025; // Match the speed of moving objects
+    // Scroll the texture at the same rate as coins and trees (stop if game is paused or over)
+    if (!gameState.isGameOver && !gameState.isPaused) {
+      atlasTexture.offset.y += (gameSpeed * delta) * 0.025; // Match the speed of moving objects
+    }
   });
   
   return (
     <mesh ref={meshRef} position={[0, -0.5, -10]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
       <planeGeometry args={[10, 40]} />
       <meshStandardMaterial 
-        map={atlasTexture}
+        map={atlasTexture || undefined}
         color="#ffffff"
         receiveShadow
       />
@@ -275,8 +287,14 @@ function GameScene({ gameState, setGameState, pet }) {
     
     spawnTimerRef.current += delta;
     
+    // Calculate spawn interval based on game speed to maintain consistent object density
+    // As speed increases, spawn more frequently to maintain the same object spacing
+    const baseSpawnInterval = 0.5;
+    const speedMultiplier = currentGameSpeed / BASE_GAME_SPEED;
+    const adjustedSpawnInterval = baseSpawnInterval / speedMultiplier;
+    
     // Spawn coins and trees
-    if (spawnTimerRef.current > 0.5) { // Spawn every 0.5 seconds
+    if (spawnTimerRef.current > adjustedSpawnInterval) {
       spawnTimerRef.current = 0;
       
       let usedLanes = new Set(); // Track which lanes are used for coins this spawn cycle
@@ -292,11 +310,12 @@ function GameScene({ gameState, setGameState, pet }) {
         setCoins(prev => [...prev, newCoin]);
       }
       
-      // Spawn large coin (rare) - only in lanes not used by regular coins
-      if (Math.random() < LARGE_COIN_SPAWN_RATE * 25) {
+      // Spawn large coin (rare) - only in lanes not used by regular coins and only after score 20
+      if (gameState.score >= 20 && Math.random() < LARGE_COIN_SPAWN_RATE * 25) {
         const availableLanes = [0, 1, 2].filter(lane => !usedLanes.has(lane));
         if (availableLanes.length > 0) {
           const lane = availableLanes[Math.floor(Math.random() * availableLanes.length)];
+          usedLanes.add(lane); // Mark this lane as used
           const newLargeCoin = {
             id: Date.now() + Math.random() + 500,
             position: [LANES[lane], 0.5, -20]
@@ -305,14 +324,17 @@ function GameScene({ gameState, setGameState, pet }) {
         }
       }
       
-      // Spawn tree
+      // Spawn tree - only in lanes not used by coins
       if (Math.random() < TREE_SPAWN_RATE * 25) {
-        const lane = Math.floor(Math.random() * 3);
-        const newTree = {
-          id: Date.now() + Math.random() + 1000,
-          position: [LANES[lane], -0.5, -20] // Position trees on the ground surface
-        };
-        setTrees(prev => [...prev, newTree]);
+        const availableLanes = [0, 1, 2].filter(lane => !usedLanes.has(lane));
+        if (availableLanes.length > 0) {
+          const lane = availableLanes[Math.floor(Math.random() * availableLanes.length)];
+          const newTree = {
+            id: Date.now() + Math.random() + 1000,
+            position: [LANES[lane], -0.5, -20] // Position trees on the ground surface
+          };
+          setTrees(prev => [...prev, newTree]);
+        }
       }
     }
     
@@ -328,7 +350,7 @@ function GameScene({ gameState, setGameState, pet }) {
         const distanceZ = Math.abs(coinPos.z - playerZ);
         
         // More lenient collision detection for coins
-        if (distanceX < 0.35 && distanceZ < 1.0) {
+        if (distanceX < 0.35 && distanceZ < 0.6) {
           console.log('Coin collected!', coin.id); // Debug log
           setGameState(prev => ({
             ...prev,
@@ -348,7 +370,7 @@ function GameScene({ gameState, setGameState, pet }) {
         const distanceZ = Math.abs(largeCoinPos.z - playerZ);
         
         // More lenient collision detection for large coins
-        if (distanceX < 0.45 && distanceZ < 1.0) {
+        if (distanceX < 0.45 && distanceZ < 0.6) {
           console.log('Large coin collected!', largeCoin.id); // Debug log
           setGameState(prev => ({
             ...prev,
@@ -405,7 +427,7 @@ function GameScene({ gameState, setGameState, pet }) {
       />
       
       {/* Scrolling ground with grass tiles */}
-      <ScrollingGround gameSpeed={currentGameSpeed} />
+      <ScrollingGround gameSpeed={currentGameSpeed} gameState={gameState} />
       
       {/* Lane markers */}
       {LANES.map((laneX, index) => (
@@ -432,6 +454,7 @@ function GameScene({ gameState, setGameState, pet }) {
             onCollect={() => handleCoinCollect(coin.id)}
             positionRef={{ current: coinPositionRefs.current[coin.id] }}
             gameSpeed={currentGameSpeed}
+            gameState={gameState}
           />
         );
       })}
@@ -450,6 +473,7 @@ function GameScene({ gameState, setGameState, pet }) {
             onCollect={() => handleLargeCoinCollect(largeCoin.id)}
             positionRef={{ current: largeCoinPositionRefs.current[largeCoin.id] }}
             gameSpeed={currentGameSpeed}
+            gameState={gameState}
           />
         );
       })}
@@ -468,6 +492,7 @@ function GameScene({ gameState, setGameState, pet }) {
             onCollision={() => handleTreeCollision(tree.id)}
             positionRef={{ current: treePositionRefs.current[tree.id] }}
             gameSpeed={currentGameSpeed}
+            gameState={gameState}
           />
         );
       })}
@@ -481,7 +506,7 @@ function EndlessRunner() {
   
   const pet = userData?.pets.find(p => p.id === navigation.activePetId);
   const [gameState, setGameState] = useState({
-    isGameStarted: false,
+    isGameStarted: true,
     isGameOver: false,
     isPaused: false,
     currentLane: 1, // Start in middle lane
@@ -556,16 +581,20 @@ function EndlessRunner() {
     });
   };
   
-  const restartGame = () => {
-    startGame();
+  const collectCoinsAndExit = () => {
+    // Navigate back to main/default, closing pet summary
+    navigateTo("main", "default");
   };
   
-  const goBack = () => {
-    navigateTo("petSummary", null, navigation.activePetId);
+  const togglePause = () => {
+    setGameState(prev => ({
+      ...prev,
+      isPaused: !prev.isPaused
+    }));
   };
   
   if (!pet) {
-    goBack();
+    collectCoinsAndExit();
     return null;
   }
   
@@ -587,27 +616,29 @@ function EndlessRunner() {
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
         {/* Top UI */}
         <div className="absolute top-4 left-4 right-4 flex justify-between items-center pointer-events-auto">
-          <div onClick={goBack}>
-            <IconButton iconName='exitIcon' withEffects={false} />
+          <div onClick={togglePause}>
+            <IconButton iconName={gameState.isPaused ? 'playIcon' : 'pauseIcon'} withEffects={false} />
           </div>
           <div className="text-white font-m6x11 text-xl bg-black/50 px-4 py-2 rounded">
             Score: {gameState.score}
           </div>
         </div>
         
-        {/* Start Screen */}
-        {!gameState.isGameStarted && (
-          <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center pointer-events-auto">
-            <h1 className="text-white font-m6x11 text-4xl mb-4">Endless Runner</h1>
-            <p className="text-white font-m6x11 text-lg mb-8 text-center px-4">
-              Swipe left/right or use arrow keys to change lanes<br/>
-              Collect coins and avoid trees!
-            </p>
+        {/* Pause Screen */}
+        {gameState.isPaused && !gameState.isGameOver && (
+          <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center pointer-events-auto">
+            <h1 className="text-white font-m6x11 text-3xl mb-4">Paused</h1>
             <button 
-              onClick={startGame}
-              className="bg-green-600 hover:bg-green-500 text-white font-m6x11 px-8 py-4 rounded text-xl transition-colors"
+              onClick={togglePause}
+              className="bg-blue-600 hover:bg-blue-500 text-white font-m6x11 px-6 py-3 rounded text-lg transition-colors mb-4"
             >
-              Start Game
+              Resume
+            </button>
+            <button 
+              onClick={collectCoinsAndExit}
+              className="bg-gray-600 hover:bg-gray-500 text-white font-m6x11 px-6 py-3 rounded text-lg transition-colors"
+            >
+              Exit Game
             </button>
           </div>
         )}
@@ -616,21 +647,12 @@ function EndlessRunner() {
         {gameState.isGameOver && (
           <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center pointer-events-auto">
             <h1 className="text-white font-m6x11 text-4xl mb-4">Game Over!</h1>
-            <p className="text-white font-m6x11 text-xl mb-8">Final Score: {gameState.score}</p>
-            <div className="flex gap-4">
-              <button 
-                onClick={restartGame}
-                className="bg-green-600 hover:bg-green-500 text-white font-m6x11 px-6 py-3 rounded text-lg transition-colors"
-              >
-                Play Again
-              </button>
-              <button 
-                onClick={goBack}
-                className="bg-gray-600 hover:bg-gray-500 text-white font-m6x11 px-6 py-3 rounded text-lg transition-colors"
-              >
-                Back to Pet
-              </button>
-            </div>
+            <button 
+              onClick={collectCoinsAndExit}
+              className="bg-green-600 hover:bg-green-500 text-white font-m6x11 px-6 py-3 rounded text-lg transition-colors"
+            >
+              Collect {gameState.score} coins
+            </button>
           </div>
         )}
       </div>
