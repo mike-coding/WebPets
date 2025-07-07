@@ -502,7 +502,7 @@ function GameScene({ gameState, setGameState, pet }) {
 
 function EndlessRunner() {
   const { navigation, navigateTo } = useNavigationContext();
-  const { userData } = useUserDataContext();
+  const { userData, updateUserData } = useUserDataContext();
   
   const pet = userData?.pets.find(p => p.id === navigation.activePetId);
   const [gameState, setGameState] = useState({
@@ -540,6 +540,9 @@ function EndlessRunner() {
           currentLane: Math.min(2, prev.currentLane + 1)
         }));
       }
+    } else if (gameState.isPaused) {
+      // If paused and this is a tap (not swipe), unpause
+      setGameState(prev => ({ ...prev, isPaused: false }));
     }
     setTouchStart(null);
   };
@@ -582,6 +585,13 @@ function EndlessRunner() {
   };
   
   const collectCoinsAndExit = () => {
+    // Add collected coins to user's money
+    if (userData && gameState.score > 0) {
+      updateUserData({
+        money: userData.money + gameState.score
+      });
+    }
+    
     // Navigate back to main/default, closing pet summary
     navigateTo("main", "default");
   };
@@ -591,6 +601,25 @@ function EndlessRunner() {
       ...prev,
       isPaused: !prev.isPaused
     }));
+  };
+
+  const handleCanvasClick = (e) => {
+    // Any click/tap on canvas toggles pause (unless it's a swipe or on exit button)
+    if (!gameState.isGameOver) {
+      if (gameState.isPaused) {
+        // If paused, check if clicking on exit button area
+        const rect = e.target.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        // Only unpause if not clicking near the exit button area (rough bounds)
+        if (!(x > rect.width * 0.3 && x < rect.width * 0.7 && y > rect.height * 0.6)) {
+          setGameState(prev => ({ ...prev, isPaused: false }));
+        }
+      } else {
+        // If not paused, any click pauses the game
+        setGameState(prev => ({ ...prev, isPaused: true }));
+      }
+    }
   };
   
   if (!pet) {
@@ -605,6 +634,7 @@ function EndlessRunner() {
         camera={{ position: [0, 5, 3], fov: 60 }}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
+        onClick={handleCanvasClick}
         className="w-full h-full"
       >
         {gameState.isGameStarted && (
@@ -614,45 +644,63 @@ function EndlessRunner() {
       
       {/* UI Overlay */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-        {/* Top UI */}
-        <div className="absolute top-4 left-4 right-4 flex justify-between items-center pointer-events-auto">
-          <div onClick={togglePause}>
-            <IconButton iconName={gameState.isPaused ? 'playIcon' : 'pauseIcon'} withEffects={false} />
-          </div>
-          <div className="text-white font-m6x11 text-xl bg-black/50 px-4 py-2 rounded">
+        {/* Background Overlay - shown when paused or game over */}
+        {(gameState.isPaused || gameState.isGameOver) && (
+          <div className="absolute inset-0 bg-gray-900/60 pointer-events-none" />
+        )}
+        
+        {/* Top UI - Score back to top right */}
+        <div className="absolute top-4 right-4 pointer-events-auto">
+          <div className="text-white font-m6x11 text-xl bg-gray-900/30 px-4 py-2 rounded">
             Score: {gameState.score}
           </div>
         </div>
         
-        {/* Pause Screen */}
+        {/* Bottom Left UI - Pause button */}
+        <div className="absolute bottom-4 left-4 pointer-events-auto">
+          <div onClick={togglePause}>
+            <IconButton iconName={gameState.isPaused ? 'runIcon' : 'pauseIcon'} withEffects={false} />
+          </div>
+        </div>
+        
+        {/* Pause Menu - Center UI */}
         {gameState.isPaused && !gameState.isGameOver && (
-          <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center pointer-events-auto">
-            <h1 className="text-white font-m6x11 text-3xl mb-4">Paused</h1>
-            <button 
-              onClick={togglePause}
-              className="bg-blue-600 hover:bg-blue-500 text-white font-m6x11 px-6 py-3 rounded text-lg transition-colors mb-4"
-            >
-              Resume
-            </button>
-            <button 
-              onClick={collectCoinsAndExit}
-              className="bg-gray-600 hover:bg-gray-500 text-white font-m6x11 px-6 py-3 rounded text-lg transition-colors"
+          <div 
+            className="absolute inset-0 flex flex-col items-center justify-center mb-20 pointer-events-auto"
+            onClick={(e) => {
+              // If clicking the background (not a button), unpause
+              if (e.target === e.currentTarget) {
+                setGameState(prev => ({ ...prev, isPaused: false }));
+              }
+            }}
+          >
+            <div className="text-white font-m6x11 text-6xl mb-20">
+              Paused
+            </div>
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                collectCoinsAndExit();
+              }}
+              className="text-white font-m6x11 text-xl bg-gray-900/30 px-6 py-3 rounded"
             >
               Exit Game
-            </button>
+            </div>
           </div>
         )}
         
-        {/* Game Over Screen */}
+        {/* Game Over Menu - Center UI */}
         {gameState.isGameOver && (
-          <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center pointer-events-auto">
-            <h1 className="text-white font-m6x11 text-4xl mb-4">Game Over!</h1>
-            <button 
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-auto">
+            <div className="text-white font-m6x11 text-6xl mb-20">
+              Game Over!
+            </div>
+            <div 
               onClick={collectCoinsAndExit}
-              className="bg-green-600 hover:bg-green-500 text-white font-m6x11 px-6 py-3 rounded text-lg transition-colors"
+              className="text-white font-m6x11 text-xl bg-gray-900/30 px-6 py-3 rounded"
             >
               Collect {gameState.score} coins
-            </button>
+            </div>
           </div>
         )}
       </div>
