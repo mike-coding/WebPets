@@ -6,6 +6,7 @@ import HomeUI from './HomeUI';
 import PetSummary from './PetSummary';
 import PartyView from './PartyView';
 import InventoryUI from './InventoryUI';
+import ShopUI from './ShopUI';
 import EndlessRunner from './EndlessRunner_simple';
 
 function UIOverlay() {
@@ -32,6 +33,11 @@ function UIOverlay() {
       ) : navigation.activePage === "inventory" ? (
         <>
           <InventoryUI/>
+          <HomeUI/>
+        </>
+      ) : navigation.activePage === "shop" ? (
+        <>
+          <ShopUI/>
           <HomeUI/>
         </>
       ) : navigation.activePage === "minigames" && navigation.activeSubPage === "endless_runner" ? (

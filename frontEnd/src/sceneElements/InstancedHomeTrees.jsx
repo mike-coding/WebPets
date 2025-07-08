@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useEffect } from "react";
+import React, { useMemo, useRef, useEffect, useState, useLayoutEffect } from "react";
 import { useLoader } from "@react-three/fiber";
 import { OBJLoader } from "three-stdlib";
 import { MTLLoader } from "three-stdlib";
@@ -7,6 +7,7 @@ import * as THREE from "three";
 // Helper component for instancing one submesh.
 function InstancedTreeMesh({ meshData, transforms }) {
   const instancedMeshRef = useRef();
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     if (!instancedMeshRef.current) return;
@@ -22,6 +23,9 @@ function InstancedTreeMesh({ meshData, transforms }) {
       instancedMeshRef.current.setMatrixAt(i, finalMatrix);
     });
     instancedMeshRef.current.instanceMatrix.needsUpdate = true;
+    
+    // Make visible after a short delay to ensure transforms are applied
+    setTimeout(() => setIsVisible(true), 50);
   }, [transforms, meshData]);
 
   return (
@@ -30,6 +34,7 @@ function InstancedTreeMesh({ meshData, transforms }) {
       args={[meshData.geometry, meshData.material, transforms.length]}
       castShadow
       receiveShadow
+      visible={isVisible}
     />
   );
 }
