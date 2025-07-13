@@ -5,6 +5,14 @@ import { useNavigationContext } from '../hooks/AppContext';
 function HomeUI() {
     const { navigation, navigateTo } = useNavigationContext();
 
+    const toggleShop = () => {
+        if (navigation.activePage === "shop") {
+            navigateTo("main", "default");
+        } else {
+            navigateTo("shop");
+        }
+    };
+
     const toggleInventory = () => {
         if (navigation.activePage === "inventory") {
             navigateTo("main", "default");
@@ -31,7 +39,9 @@ function HomeUI() {
                 <div onClick={toggleInventory}>
                     <IconButton iconName='Chest'/>
                 </div>
-                <IconButton iconName='shopIcon'/>
+                <div onClick={toggleShop}>
+                    <IconButton iconName='shopIcon'/>
+                </div>
                 </div>
                 <IconButton iconName='settingsIcon'/>
             </div>
