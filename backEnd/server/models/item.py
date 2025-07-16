@@ -12,7 +12,10 @@ class Item(db.Model):
     health_effect = db.Column(db.String(100)) # heal illness, make ill chance? etc
     dimension_x = db.Column(db.Integer, default=0)
     dimension_y = db.Column(db.Integer, default=0)
-    held_effect = db.Column(db.String)
+    held_effect = db.Column(db.String(100), default='')  # Effect when held, e.g. 'glow', 'sparkle', etc.
+    size_modifier = db.Column(db.String(1), default='M')  # 'S', 'M', 'L'
+    can_store = db.Column(db.Boolean, default=True)  # Can this item be stored in inventory?
+    sprite_id = db.Column(db.Integer, nullable=True)  # ID of the sprite in the sprite sheet
 
 
     def to_dict(self):

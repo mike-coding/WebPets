@@ -25,7 +25,12 @@ We're very much in the early stages here still, but I'm stoked about the accessi
     * [ ] shop
     * [ ] item definitions
 * [ ] minigames
-    * [x] minigame 1 (endless runner)
+    * [ ] minigame 1 (endless runner)
+        * [x] MVP
+        * [ ] beautify
+        * [ ] more obstacles
+        * [ ] better pacing
+        * [ ] other stuff ?
 * [ ] sprite revisions
     * [x] 1-1
     * [ ] 1-2
