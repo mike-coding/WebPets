@@ -550,7 +550,7 @@ function EndlessRunner() {
   // Keyboard controls
   useEffect(() => {
     const handleKeyPress = (e) => {
-      if (gameState.isGameOver) return;
+      if (gameState.isGameOver || gameState.isPaused) return;
       
       switch(e.key) {
         case 'ArrowLeft':
@@ -572,7 +572,7 @@ function EndlessRunner() {
     
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [gameState.isGameOver]);
+  }, [gameState.isGameOver, gameState.isPaused]);
   
   const startGame = () => {
     setGameState({
